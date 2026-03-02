@@ -3,6 +3,8 @@ from datetime import date, datetime, timezone
 from sqlalchemy import Column, Date, DateTime, Float, ForeignKey, Integer, String, Table, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
+TRIPS_ID_FK = "trips.id"
+
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
@@ -15,7 +17,7 @@ class Base(DeclarativeBase):
 trip_people = Table(
     "trip_people",
     Base.metadata,
-    Column("trip_id", ForeignKey("trips.id", ondelete="CASCADE"), primary_key=True),
+    Column("trip_id", ForeignKey(TRIPS_ID_FK, ondelete="CASCADE"), primary_key=True),
     Column("person_id", ForeignKey("people.id", ondelete="CASCADE"), primary_key=True),
 )
 
@@ -59,7 +61,7 @@ class CostItem(Base):
     __tablename__ = "cost_items"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    trip_id: Mapped[int] = mapped_column(ForeignKey("trips.id", ondelete="CASCADE"), nullable=False)
+    trip_id: Mapped[int] = mapped_column(ForeignKey(TRIPS_ID_FK, ondelete="CASCADE"), nullable=False)
     category: Mapped[str] = mapped_column(String(255), nullable=False)
     amount: Mapped[float] = mapped_column(Float, nullable=False)
     currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
@@ -79,7 +81,7 @@ class Comment(Base):
     __tablename__ = "comments"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    trip_id: Mapped[int] = mapped_column(ForeignKey("trips.id", ondelete="CASCADE"), nullable=False)
+    trip_id: Mapped[int] = mapped_column(ForeignKey(TRIPS_ID_FK, ondelete="CASCADE"), nullable=False)
     body: Mapped[str] = mapped_column(Text, nullable=False)
     url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)

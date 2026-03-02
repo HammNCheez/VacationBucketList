@@ -1,3 +1,5 @@
+import pytest
+
 from fastapi.testclient import TestClient
 
 
@@ -27,7 +29,7 @@ def test_trip_crud_flow(client: TestClient) -> None:
     assert create_response.status_code == 201
     created = create_response.json()
     trip_id = created["id"]
-    assert created["distance_miles"] == 100.0
+    assert created["distance_miles"] == pytest.approx(100.0)
     assert created["trip_types"] == ["Camping", "Family"]
     assert created["target_date_range"] == "Summer 2027"
     assert created["total_trip_length"] == "7 days, 6 hours"

@@ -37,6 +37,70 @@ class TripRepository(ITripRepository):
     def _trip_types_to_db(self, values: list[str]) -> str:
         return json.dumps(values)
 
+    def _matches_status_priority(
+        self,
+        trip: Trip,
+        statuses: list[str],
+        priorities: list[str],
+    ) -> bool:
+        if statuses and trip.status not in statuses:
+            return False
+        if priorities and trip.priority not in priorities:
+            return False
+        return True
+
+    def _matches_trip_type(self, trip: Trip, trip_types: list[str]) -> bool:
+        if not trip_types:
+            return True
+        parsed_trip_types = set(self._trip_types_from_db(trip.trip_types))
+        return bool(parsed_trip_types.intersection(set(trip_types)))
+
+    def _matches_distance(self, trip: Trip, distance_min: float | None, distance_max: float | None) -> bool:
+        if distance_min is not None and (trip.distance_miles is None or trip.distance_miles < distance_min):
+            return False
+        if distance_max is not None and (trip.distance_miles is None or trip.distance_miles > distance_max):
+            return False
+        return True
+
+    def _matches_search(self, trip: Trip, search: str | None) -> bool:
+        if not search:
+            return True
+        search_value = search.lower()
+        return search_value in trip.title.lower() or search_value in trip.location.lower()
+
+    def _matches_dates(
+        self,
+        trip: Trip,
+        target_date_start: date | None,
+        target_date_end: date | None,
+    ) -> bool:
+        if target_date_start and trip.target_date_start and trip.target_date_start < target_date_start:
+            return False
+        if target_date_end and trip.target_date_end and trip.target_date_end > target_date_end:
+            return False
+        return True
+
+    def _matches_filters(
+        self,
+        trip: Trip,
+        *,
+        statuses: list[str],
+        priorities: list[str],
+        trip_types: list[str],
+        distance_min: float | None,
+        distance_max: float | None,
+        search: str | None,
+        target_date_start: date | None,
+        target_date_end: date | None,
+    ) -> bool:
+        return (
+            self._matches_status_priority(trip, statuses, priorities)
+            and self._matches_trip_type(trip, trip_types)
+            and self._matches_distance(trip, distance_min, distance_max)
+            and self._matches_search(trip, search)
+            and self._matches_dates(trip, target_date_start, target_date_end)
+        )
+
     def _apply_children(self, trip: Trip, payload: dict[str, Any]) -> None:
         if "cost_items" in payload:
             trip.cost_items.clear()
@@ -142,31 +206,21 @@ class TripRepository(ITripRepository):
     ) -> list[Trip]:
         trips = self._base_query().all()
 
-        def matches(trip: Trip) -> bool:
-            parsed_trip_types = set(self._trip_types_from_db(trip.trip_types))
-            if statuses and trip.status not in statuses:
-                return False
-            if priorities and trip.priority not in priorities:
-                return False
-            if trip_types and not parsed_trip_types.intersection(set(trip_types)):
-                return False
-            if distance_min is not None:
-                if trip.distance_miles is None or trip.distance_miles < distance_min:
-                    return False
-            if distance_max is not None:
-                if trip.distance_miles is None or trip.distance_miles > distance_max:
-                    return False
-            if search:
-                search_value = search.lower()
-                if search_value not in trip.title.lower() and search_value not in trip.location.lower():
-                    return False
-            if target_date_start and trip.target_date_start and trip.target_date_start < target_date_start:
-                return False
-            if target_date_end and trip.target_date_end and trip.target_date_end > target_date_end:
-                return False
-            return True
-
-        filtered = [trip for trip in trips if matches(trip)]
+        filtered = [
+            trip
+            for trip in trips
+            if self._matches_filters(
+                trip,
+                statuses=statuses,
+                priorities=priorities,
+                trip_types=trip_types,
+                distance_min=distance_min,
+                distance_max=distance_max,
+                search=search,
+                target_date_start=target_date_start,
+                target_date_end=target_date_end,
+            )
+        ]
         filtered.sort(
             key=lambda trip: (
                 PRIORITY_SORT_ORDER.get(trip.priority, 99),

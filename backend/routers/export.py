@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends
@@ -27,11 +29,11 @@ def get_settings_repository(db: Session = Depends(get_db)) -> SettingsRepository
     return SettingsRepository(db)
 
 
-@router.get("", response_model=ExportResponse)
+@router.get("")
 def export_data(
-    trip_repository: TripRepository = Depends(get_trip_repository),
-    people_repository: PeopleRepository = Depends(get_people_repository),
-    settings_repository: SettingsRepository = Depends(get_settings_repository),
+    trip_repository: Annotated[TripRepository, Depends(get_trip_repository)],
+    people_repository: Annotated[PeopleRepository, Depends(get_people_repository)],
+    settings_repository: Annotated[SettingsRepository, Depends(get_settings_repository)],
 ) -> ExportResponse:
     settings = settings_repository.get()
     return ExportResponse(

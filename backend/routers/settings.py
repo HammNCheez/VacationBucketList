@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -12,17 +14,20 @@ def get_settings_repository(db: Session = Depends(get_db)) -> SettingsRepository
     return SettingsRepository(db)
 
 
-@router.get("", response_model=SettingsRead)
-def get_settings(repository: SettingsRepository = Depends(get_settings_repository)) -> SettingsRead:
+@router.get("")
+def get_settings(
+    repository: Annotated[SettingsRepository, Depends(get_settings_repository)],
+) -> SettingsRead:
     settings = repository.get()
     if not settings:
         return SettingsRead()
     return SettingsRead.model_validate(settings)
 
 
-@router.put("", response_model=SettingsRead)
+@router.put("")
 def update_settings(
-    payload: SettingsUpdate, repository: SettingsRepository = Depends(get_settings_repository)
+    payload: SettingsUpdate,
+    repository: Annotated[SettingsRepository, Depends(get_settings_repository)],
 ) -> SettingsRead:
     settings = repository.update(payload.home_city, payload.home_zip)
     return SettingsRead.model_validate(settings)
