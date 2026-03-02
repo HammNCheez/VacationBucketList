@@ -14,6 +14,7 @@ class SettingsRepository(ISettingsRepository):
     def update(self, home_city: str | None, home_zip: str | None) -> Settings:
         settings = self.get()
         if settings is None:
+            # Settings is a singleton row; id=1 is the single allowed record.
             settings = Settings(id=1)
             self.db.add(settings)
 

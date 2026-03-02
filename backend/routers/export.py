@@ -9,7 +9,7 @@ from models.schemas import ExportResponse, PersonRead, SettingsRead
 from repositories.people_repo import PeopleRepository
 from repositories.settings_repo import SettingsRepository
 from repositories.trip_repo import TripRepository
-from routers.trips import _trip_to_response
+from routers.trips import trip_to_response
 
 SCHEMA_VERSION = "1.0"
 
@@ -38,7 +38,7 @@ def export_data(
     return ExportResponse(
         schema_version=SCHEMA_VERSION,
         exported_at=datetime.now(timezone.utc),
-        trips=[_trip_to_response(trip) for trip in trip_repository.all()],
+        trips=[trip_to_response(trip) for trip in trip_repository.all()],
         people=[PersonRead.model_validate(person) for person in people_repository.list()],
         settings=SettingsRead.model_validate(settings) if settings else SettingsRead(),
     )

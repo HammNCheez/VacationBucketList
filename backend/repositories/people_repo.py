@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from models.db import Person, Trip
+from models.db import Person
 from repositories.base import IPeopleRepository
 
 
@@ -23,11 +23,8 @@ class PeopleRepository(IPeopleRepository):
         if not person:
             return False
 
-        trips = self.db.query(Trip).all()
-        for trip in trips:
-            if person in trip.people:
-                trip.people.remove(person)
-
+        # The trip_people association table has ondelete="CASCADE" on person_id,
+        # so the DB removes join-table rows automatically on commit.
         self.db.delete(person)
         self.db.commit()
         return True

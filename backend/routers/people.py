@@ -1,6 +1,7 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi import status as http_status
 from sqlalchemy.orm import Session
 
 from database.connection import get_db
@@ -21,7 +22,7 @@ def list_people(
     return [PersonRead.model_validate(person) for person in repository.list()]
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=http_status.HTTP_201_CREATED)
 def create_person(
     payload: PersonCreate,
     repository: Annotated[PeopleRepository, Depends(get_people_repository)],
@@ -30,11 +31,11 @@ def create_person(
     return PersonRead.model_validate(person)
 
 
-@router.delete("/{person_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{person_id}", status_code=http_status.HTTP_204_NO_CONTENT)
 def delete_person(
     person_id: int,
     repository: Annotated[PeopleRepository, Depends(get_people_repository)],
 ) -> None:
     deleted = repository.delete(person_id)
     if not deleted:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Person not found")
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Person not found")

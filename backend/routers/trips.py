@@ -1,7 +1,6 @@
-import json
 import logging
 from datetime import date
-from typing import Annotated
+from typing import Annotated, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi import status as http_status
@@ -12,14 +11,16 @@ from models.db import Trip
 from models.schemas import (
     TripCreate,
     TripMutationResponse,
+    TripPriority,
     TripRead,
+    TripStatus,
     TripUpdate,
     WarningMessage,
 )
 from repositories.settings_repo import SettingsRepository
 from repositories.trip_repo import TripRepository
 from services.distance import DistanceResult, DistanceService, DistanceUnavailableError
-from services.formatting import normalize_title_case_list, to_title_case
+from services.formatting import normalize_title_case_list, to_title_case, trip_types_from_db
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -40,16 +41,6 @@ def get_distance_service() -> DistanceService:
     return DistanceService()
 
 
-def _trip_types_from_db(value: str) -> list[str]:
-    try:
-        parsed = json.loads(value)
-        if isinstance(parsed, list):
-            return [str(item) for item in parsed]
-    except json.JSONDecodeError:
-        pass
-    return []
-
-
 def _format_number(value: float) -> str:
     if float(value).is_integer():
         return str(int(value))
@@ -57,6 +48,7 @@ def _format_number(value: float) -> str:
 
 
 def _build_total_trip_length(duration_days: float, travel_time_hours: float) -> str:
+    # Multiply travel_time_hours by 2 to account for the round trip (outbound + return).
     total_travel_hours = travel_time_hours * 2
     extra_days = int(total_travel_hours // 24)
     remaining_hours = total_travel_hours % 24
@@ -78,10 +70,10 @@ def _build_per_person_cost(trip: Trip) -> tuple[float | None, str | None]:
     return per_person, currency
 
 
-def _trip_to_response(
+def trip_to_response(
     trip: Trip, warnings: list[WarningMessage] | None = None
 ) -> TripMutationResponse:
-    trip_types = _trip_types_from_db(trip.trip_types)
+    trip_types = trip_types_from_db(trip.trip_types)
     per_person_cost, per_person_currency = _build_per_person_cost(trip)
 
     return TripMutationResponse(
@@ -94,8 +86,8 @@ def _trip_to_response(
         origin_lat=trip.origin_lat,
         origin_lng=trip.origin_lng,
         distance_miles=trip.distance_miles,
-        status=trip.status,
-        priority=trip.priority,
+        status=cast(TripStatus, trip.status),
+        priority=cast(TripPriority, trip.priority),
         trip_types=trip_types,
         travel_time_hours=trip.travel_time_hours,
         duration_days=trip.duration_days,
@@ -207,7 +199,7 @@ def list_trips(
         target_date_start=target_date_start,
         target_date_end=target_date_end,
     )
-    return [_trip_to_response(trip) for trip in trips]
+    return [trip_to_response(trip) for trip in trips]
 
 
 @router.get("/autocomplete")
@@ -230,7 +222,7 @@ def get_trip(
         raise HTTPException(
             status_code=http_status.HTTP_404_NOT_FOUND, detail=TRIP_NOT_FOUND_MESSAGE
         )
-    return _trip_to_response(trip)
+    return trip_to_response(trip)
 
 
 @router.post("", status_code=http_status.HTTP_201_CREATED)
@@ -257,7 +249,7 @@ def create_trip(
     )
 
     trip = repository.create(values)
-    return _trip_to_response(trip, warnings)
+    return trip_to_response(trip, warnings)
 
 
 @router.put("/{trip_id}")
@@ -300,7 +292,7 @@ def update_trip(
         raise HTTPException(
             status_code=http_status.HTTP_404_NOT_FOUND, detail=TRIP_NOT_FOUND_MESSAGE
         )
-    return _trip_to_response(trip, warnings)
+    return trip_to_response(trip, warnings)
 
 
 @router.delete("/{trip_id}", status_code=http_status.HTTP_204_NO_CONTENT)

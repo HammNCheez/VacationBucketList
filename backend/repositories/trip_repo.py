@@ -4,10 +4,11 @@ import json
 from datetime import date
 from typing import Any
 
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Query, Session, joinedload
 
 from models.db import Comment, CostItem, Person, Trip
 from repositories.base import ITripRepository
+from services.formatting import trip_types_from_db
 
 PRIORITY_SORT_ORDER = {"Must-do": 0, "Want-to": 1, "Nice-to-have": 2}
 
@@ -16,7 +17,7 @@ class TripRepository(ITripRepository):
     def __init__(self, db: Session) -> None:
         self.db = db
 
-    def _base_query(self):
+    def _base_query(self) -> Query[Trip]:
         return self.db.query(Trip).options(
             joinedload(Trip.cost_items), joinedload(Trip.comments), joinedload(Trip.people)
         )
@@ -26,15 +27,6 @@ class TripRepository(ITripRepository):
 
     def all(self) -> list[Trip]:
         return self._base_query().all()
-
-    def _trip_types_from_db(self, value: str) -> list[str]:
-        try:
-            loaded = json.loads(value)
-            if isinstance(loaded, list):
-                return [str(item) for item in loaded]
-        except json.JSONDecodeError:
-            pass
-        return []
 
     def _trip_types_to_db(self, values: list[str]) -> str:
         return json.dumps(values)
@@ -54,7 +46,7 @@ class TripRepository(ITripRepository):
     def _matches_trip_type(self, trip: Trip, trip_types: list[str]) -> bool:
         if not trip_types:
             return True
-        parsed_trip_types = set(self._trip_types_from_db(trip.trip_types))
+        parsed_trip_types = set(trip_types_from_db(trip.trip_types))
         return bool(parsed_trip_types.intersection(set(trip_types)))
 
     def _matches_distance(
@@ -249,7 +241,7 @@ class TripRepository(ITripRepository):
         values: set[str] = set()
         if field == "trip_type":
             for trip in self.db.query(Trip).all():
-                values.update(self._trip_types_from_db(trip.trip_types))
+                values.update(trip_types_from_db(trip.trip_types))
         elif field == "target_date_range":
             rows = (
                 self.db.query(Trip.target_date_range)
