@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+backend/.env
+backend/vacation_bucket_list.db
