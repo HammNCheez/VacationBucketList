@@ -3,7 +3,8 @@ import logging
 from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status as http_status
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import status as http_status
 from sqlalchemy.orm import Session
 
 from database.connection import get_db
@@ -77,7 +78,9 @@ def _build_per_person_cost(trip: Trip) -> tuple[float | None, str | None]:
     return per_person, currency
 
 
-def _trip_to_response(trip: Trip, warnings: list[WarningMessage] | None = None) -> TripMutationResponse:
+def _trip_to_response(
+    trip: Trip, warnings: list[WarningMessage] | None = None
+) -> TripMutationResponse:
     trip_types = _trip_types_from_db(trip.trip_types)
     per_person_cost, per_person_currency = _build_per_person_cost(trip)
 
@@ -189,7 +192,10 @@ def list_trips(
     trip_type = trip_type or []
 
     if distance_min is not None and distance_max is not None and distance_min > distance_max:
-        raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail="distance_min must be <= distance_max")
+        raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST,
+            detail="distance_min must be <= distance_max",
+        )
 
     trips = repository.list(
         statuses=status,
@@ -221,7 +227,9 @@ def get_trip(
 ) -> TripRead:
     trip = repository.get(trip_id)
     if not trip:
-        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail=TRIP_NOT_FOUND_MESSAGE)
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND, detail=TRIP_NOT_FOUND_MESSAGE
+        )
     return _trip_to_response(trip)
 
 
@@ -262,7 +270,9 @@ def update_trip(
 ) -> TripMutationResponse:
     existing = repository.get(trip_id)
     if not existing:
-        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail=TRIP_NOT_FOUND_MESSAGE)
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND, detail=TRIP_NOT_FOUND_MESSAGE
+        )
 
     values = _normalize_payload(payload)
     if "origin" in values and not values["origin"]:
@@ -287,7 +297,9 @@ def update_trip(
 
     trip = repository.update(trip_id, values)
     if not trip:
-        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail=TRIP_NOT_FOUND_MESSAGE)
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND, detail=TRIP_NOT_FOUND_MESSAGE
+        )
     return _trip_to_response(trip, warnings)
 
 
@@ -298,4 +310,6 @@ def delete_trip(
 ) -> None:
     deleted = repository.delete(trip_id)
     if not deleted:
-        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail=TRIP_NOT_FOUND_MESSAGE)
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND, detail=TRIP_NOT_FOUND_MESSAGE
+        )

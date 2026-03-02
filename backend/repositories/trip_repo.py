@@ -17,7 +17,9 @@ class TripRepository(ITripRepository):
         self.db = db
 
     def _base_query(self):
-        return self.db.query(Trip).options(joinedload(Trip.cost_items), joinedload(Trip.comments), joinedload(Trip.people))
+        return self.db.query(Trip).options(
+            joinedload(Trip.cost_items), joinedload(Trip.comments), joinedload(Trip.people)
+        )
 
     def get(self, trip_id: int) -> Trip | None:
         return self._base_query().filter(Trip.id == trip_id).first()
@@ -55,10 +57,16 @@ class TripRepository(ITripRepository):
         parsed_trip_types = set(self._trip_types_from_db(trip.trip_types))
         return bool(parsed_trip_types.intersection(set(trip_types)))
 
-    def _matches_distance(self, trip: Trip, distance_min: float | None, distance_max: float | None) -> bool:
-        if distance_min is not None and (trip.distance_miles is None or trip.distance_miles < distance_min):
+    def _matches_distance(
+        self, trip: Trip, distance_min: float | None, distance_max: float | None
+    ) -> bool:
+        if distance_min is not None and (
+            trip.distance_miles is None or trip.distance_miles < distance_min
+        ):
             return False
-        if distance_max is not None and (trip.distance_miles is None or trip.distance_miles > distance_max):
+        if distance_max is not None and (
+            trip.distance_miles is None or trip.distance_miles > distance_max
+        ):
             return False
         return True
 
@@ -74,7 +82,11 @@ class TripRepository(ITripRepository):
         target_date_start: date | None,
         target_date_end: date | None,
     ) -> bool:
-        if target_date_start and trip.target_date_start and trip.target_date_start < target_date_start:
+        if (
+            target_date_start
+            and trip.target_date_start
+            and trip.target_date_start < target_date_start
+        ):
             return False
         if target_date_end and trip.target_date_end and trip.target_date_end > target_date_end:
             return False
@@ -106,7 +118,11 @@ class TripRepository(ITripRepository):
             trip.cost_items.clear()
             for item in payload["cost_items"]:
                 trip.cost_items.append(
-                    CostItem(category=item["category"], amount=item["amount"], currency=item.get("currency"))
+                    CostItem(
+                        category=item["category"],
+                        amount=item["amount"],
+                        currency=item.get("currency"),
+                    )
                 )
 
         if "comments" in payload:
@@ -235,7 +251,11 @@ class TripRepository(ITripRepository):
             for trip in self.db.query(Trip).all():
                 values.update(self._trip_types_from_db(trip.trip_types))
         elif field == "target_date_range":
-            rows = self.db.query(Trip.target_date_range).filter(Trip.target_date_range.isnot(None)).all()
+            rows = (
+                self.db.query(Trip.target_date_range)
+                .filter(Trip.target_date_range.isnot(None))
+                .all()
+            )
             values.update(value for (value,) in rows if value)
         elif field == "cost_category":
             rows = self.db.query(CostItem.category).all()

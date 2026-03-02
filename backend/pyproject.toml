@@ -1,0 +1,43 @@
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+include = "\\.pyi?$"
+extend-exclude = '''
+(
+  \.venv
+  | __pycache__
+  | vacation_bucket_list\.db
+)
+'''
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = [
+  ".venv",
+  "__pycache__",
+  "vacation_bucket_list.db",
+]
+
+[tool.ruff.lint]
+select = [
+  "E",
+  "F",
+  "I",
+  "B",
+  "UP",
+]
+ignore = [
+  "E501",
+  "B008",
+  "UP017",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = [
+  "database",
+  "models",
+  "repositories",
+  "routers",
+  "services",
+]

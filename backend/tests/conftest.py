@@ -56,7 +56,9 @@ def fake_distance_service() -> FakeDistanceService:
 
 
 @pytest.fixture()
-def client(db_session: Session, fake_distance_service: FakeDistanceService) -> Generator[TestClient, None, None]:
+def client(
+    db_session: Session, fake_distance_service: FakeDistanceService
+) -> Generator[TestClient, None, None]:
     app = create_app()
 
     def override_get_db() -> Generator[Session, None, None]:

@@ -1,5 +1,4 @@
 import pytest
-
 from fastapi.testclient import TestClient
 
 
@@ -99,7 +98,9 @@ def test_trip_filters_and_sort(client: TestClient) -> None:
     assert status_filtered.status_code == 200
     assert len(status_filtered.json()) == 1
 
-    multi_status_filtered = client.get("/trips", params=[("status", "Wishlist"), ("status", "Booked")])
+    multi_status_filtered = client.get(
+        "/trips", params=[("status", "Wishlist"), ("status", "Booked")]
+    )
     assert multi_status_filtered.status_code == 200
     assert len(multi_status_filtered.json()) == 2
 

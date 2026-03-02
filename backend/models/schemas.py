@@ -93,7 +93,11 @@ class TripBase(BaseModel):
 
     @model_validator(mode="after")
     def validate_date_range(self) -> "TripBase":
-        if self.target_date_start and self.target_date_end and self.target_date_start > self.target_date_end:
+        if (
+            self.target_date_start
+            and self.target_date_end
+            and self.target_date_start > self.target_date_end
+        ):
             raise ValueError("target_date_start must be less than or equal to target_date_end")
         return self
 
@@ -123,7 +127,11 @@ class TripUpdate(BaseModel):
 
     @model_validator(mode="after")
     def validate_date_range(self) -> "TripUpdate":
-        if self.target_date_start and self.target_date_end and self.target_date_start > self.target_date_end:
+        if (
+            self.target_date_start
+            and self.target_date_end
+            and self.target_date_start > self.target_date_end
+        ):
             raise ValueError("target_date_start must be less than or equal to target_date_end")
         return self
 

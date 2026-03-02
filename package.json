@@ -1,0 +1,11 @@
+{
+  "name": "vacation-bucket-list",
+  "private": true,
+  "scripts": {
+    "backend:lint": ".\\.venv\\Scripts\\python.exe -m ruff check backend",
+    "backend:lint:fix": ".\\.venv\\Scripts\\python.exe -m ruff check --fix backend",
+    "backend:format": ".\\.venv\\Scripts\\python.exe -m black backend",
+    "backend:format:check": ".\\.venv\\Scripts\\python.exe -m black --check backend",
+    "backend:test": "cd backend && ..\\.venv\\Scripts\\python.exe -m pytest -q tests"
+  }
+}

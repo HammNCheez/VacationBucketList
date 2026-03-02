@@ -43,7 +43,9 @@ class Trip(Base):
     target_date_end: Mapped[date | None] = mapped_column(Date, nullable=True)
     target_date_range: Mapped[str | None] = mapped_column(String(255), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False
     )
@@ -54,14 +56,18 @@ class Trip(Base):
     comments: Mapped[list["Comment"]] = relationship(
         "Comment", cascade="all, delete-orphan", back_populates="trip"
     )
-    people: Mapped[list["Person"]] = relationship("Person", secondary=trip_people, back_populates="trips")
+    people: Mapped[list["Person"]] = relationship(
+        "Person", secondary=trip_people, back_populates="trips"
+    )
 
 
 class CostItem(Base):
     __tablename__ = "cost_items"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    trip_id: Mapped[int] = mapped_column(ForeignKey(TRIPS_ID_FK, ondelete="CASCADE"), nullable=False)
+    trip_id: Mapped[int] = mapped_column(
+        ForeignKey(TRIPS_ID_FK, ondelete="CASCADE"), nullable=False
+    )
     category: Mapped[str] = mapped_column(String(255), nullable=False)
     amount: Mapped[float] = mapped_column(Float, nullable=False)
     currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
@@ -81,10 +87,14 @@ class Comment(Base):
     __tablename__ = "comments"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    trip_id: Mapped[int] = mapped_column(ForeignKey(TRIPS_ID_FK, ondelete="CASCADE"), nullable=False)
+    trip_id: Mapped[int] = mapped_column(
+        ForeignKey(TRIPS_ID_FK, ondelete="CASCADE"), nullable=False
+    )
     body: Mapped[str] = mapped_column(Text, nullable=False)
     url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
 
     trip: Mapped[Trip] = relationship("Trip", back_populates="comments")
 
