@@ -15,6 +15,7 @@ class ITripRepository(ABC):
         statuses: list[str],
         priorities: list[str],
         trip_types: list[str],
+        activity_levels: list[int],
         distance_min: float | None,
         distance_max: float | None,
         search: str | None,

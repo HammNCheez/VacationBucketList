@@ -49,6 +49,11 @@ class TripRepository(ITripRepository):
         parsed_trip_types = set(trip_types_from_db(trip.trip_types))
         return bool(parsed_trip_types.intersection(set(trip_types)))
 
+    def _matches_activity_level(self, trip: Trip, activity_levels: list[int]) -> bool:
+        if not activity_levels:
+            return True
+        return trip.activity_level in activity_levels
+
     def _matches_distance(
         self, trip: Trip, distance_min: float | None, distance_max: float | None
     ) -> bool:
@@ -91,6 +96,7 @@ class TripRepository(ITripRepository):
         statuses: list[str],
         priorities: list[str],
         trip_types: list[str],
+        activity_levels: list[int],
         distance_min: float | None,
         distance_max: float | None,
         search: str | None,
@@ -100,6 +106,7 @@ class TripRepository(ITripRepository):
         return (
             self._matches_status_priority(trip, statuses, priorities)
             and self._matches_trip_type(trip, trip_types)
+            and self._matches_activity_level(trip, activity_levels)
             and self._matches_distance(trip, distance_min, distance_max)
             and self._matches_search(trip, search)
             and self._matches_dates(trip, target_date_start, target_date_end)
@@ -138,6 +145,7 @@ class TripRepository(ITripRepository):
             status=payload["status"],
             priority=payload["priority"],
             trip_types=self._trip_types_to_db(payload.get("trip_types", [])),
+            activity_level=payload["activity_level"],
             travel_time_hours=payload.get("travel_time_hours", 0),
             duration_days=payload.get("duration_days", 0),
             target_date_start=payload.get("target_date_start"),
@@ -171,6 +179,7 @@ class TripRepository(ITripRepository):
             "priority",
             "travel_time_hours",
             "duration_days",
+            "activity_level",
             "target_date_start",
             "target_date_end",
             "target_date_range",
@@ -206,6 +215,7 @@ class TripRepository(ITripRepository):
         statuses: list[str],
         priorities: list[str],
         trip_types: list[str],
+        activity_levels: list[int],
         distance_min: float | None,
         distance_max: float | None,
         search: str | None,
@@ -222,6 +232,7 @@ class TripRepository(ITripRepository):
                 statuses=statuses,
                 priorities=priorities,
                 trip_types=trip_types,
+                activity_levels=activity_levels,
                 distance_min=distance_min,
                 distance_max=distance_max,
                 search=search,

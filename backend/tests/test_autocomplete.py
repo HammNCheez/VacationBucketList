@@ -7,6 +7,7 @@ def test_autocomplete_values(client: TestClient) -> None:
         "location": "Tokyo",
         "status": "Wishlist",
         "priority": "Must-do",
+        "activity_level": 2,
         "trip_types": ["camping"],
         "cost_items": [{"category": "flights", "amount": 100}],
         "target_date_range": "summer 2027",

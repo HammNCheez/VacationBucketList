@@ -21,6 +21,7 @@ def test_export_contains_nested_data(client: TestClient) -> None:
         "location": "Rome",
         "status": "Wishlist",
         "priority": "Must-do",
+        "activity_level": 4,
         "trip_types": ["culture"],
         "person_ids": [person_id],
         "cost_items": [{"category": "flights", "amount": 700, "currency": "USD"}],
@@ -32,6 +33,7 @@ def test_export_contains_nested_data(client: TestClient) -> None:
     assert response.status_code == 200
     body = response.json()
     assert len(body["trips"]) == 1
+    assert body["trips"][0]["activity_level"] == 4
     assert len(body["trips"][0]["cost_items"]) == 1
     assert len(body["trips"][0]["comments"]) == 1
     assert len(body["trips"][0]["people"]) == 1

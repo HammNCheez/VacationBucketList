@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 TripStatus = Literal["Wishlist", "Actively Planning", "Booked", "Completed", "Cancelled"]
 TripPriority = Literal["Must-do", "Want-to", "Nice-to-have"]
+DATE_RANGE_ERROR_MESSAGE = "target_date_start must be less than or equal to target_date_end"
 
 
 class WarningMessage(BaseModel):
@@ -84,6 +85,7 @@ class TripBase(BaseModel):
     status: TripStatus
     priority: TripPriority
     trip_types: list[str] = Field(default_factory=list)
+    activity_level: int = Field(ge=1, le=5)
     travel_time_hours: float = Field(default=0, ge=0)
     duration_days: float = Field(default=0, ge=0)
     target_date_start: date | None = None
@@ -98,7 +100,7 @@ class TripBase(BaseModel):
             and self.target_date_end
             and self.target_date_start > self.target_date_end
         ):
-            raise ValueError("target_date_start must be less than or equal to target_date_end")
+            raise ValueError(DATE_RANGE_ERROR_MESSAGE)
         return self
 
 
@@ -115,6 +117,7 @@ class TripUpdate(BaseModel):
     status: TripStatus | None = None
     priority: TripPriority | None = None
     trip_types: list[str] | None = None
+    activity_level: int | None = Field(default=None, ge=1, le=5)
     travel_time_hours: float | None = Field(default=None, ge=0)
     duration_days: float | None = Field(default=None, ge=0)
     target_date_start: date | None = None
@@ -132,7 +135,7 @@ class TripUpdate(BaseModel):
             and self.target_date_end
             and self.target_date_start > self.target_date_end
         ):
-            raise ValueError("target_date_start must be less than or equal to target_date_end")
+            raise ValueError(DATE_RANGE_ERROR_MESSAGE)
         return self
 
 
@@ -149,6 +152,7 @@ class TripRead(BaseModel):
     status: TripStatus
     priority: TripPriority
     trip_types: list[str]
+    activity_level: int
     travel_time_hours: float
     duration_days: float
     total_trip_length: str
@@ -179,3 +183,64 @@ class ExportResponse(BaseModel):
     trips: list[TripRead]
     people: list[PersonRead]
     settings: SettingsRead
+
+
+class CostItemRestore(CostItemBase):
+    id: int
+
+
+class CommentRestore(CommentBase):
+    id: int
+    created_at: datetime
+
+
+class TripRestore(BaseModel):
+    id: int
+    title: str = Field(min_length=1, max_length=255)
+    location: str = Field(min_length=1, max_length=255)
+    location_lat: float | None = None
+    location_lng: float | None = None
+    origin: str | None = None
+    origin_lat: float | None = None
+    origin_lng: float | None = None
+    distance_miles: float | None = None
+    status: TripStatus
+    priority: TripPriority
+    trip_types: list[str] = Field(default_factory=list)
+    activity_level: int = Field(ge=1, le=5)
+    travel_time_hours: float = Field(default=0, ge=0)
+    duration_days: float = Field(default=0, ge=0)
+    target_date_start: date | None = None
+    target_date_end: date | None = None
+    target_date_range: str | None = None
+    notes: str | None = None
+    created_at: datetime
+    updated_at: datetime
+    cost_items: list[CostItemRestore] = Field(default_factory=list)
+    comments: list[CommentRestore] = Field(default_factory=list)
+    people: list[PersonRead] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_date_range(self) -> "TripRestore":
+        if (
+            self.target_date_start
+            and self.target_date_end
+            and self.target_date_start > self.target_date_end
+        ):
+            raise ValueError(DATE_RANGE_ERROR_MESSAGE)
+        return self
+
+
+class RestorePayload(BaseModel):
+    schema_version: str = Field(min_length=1)
+    exported_at: datetime
+    trips: list[TripRestore]
+    people: list[PersonRead]
+    settings: SettingsRead
+
+
+class RestoreResponse(BaseModel):
+    schema_version: str
+    restored_at: datetime
+    restored_trips: int
+    restored_people: int

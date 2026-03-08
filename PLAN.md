@@ -26,6 +26,7 @@ The central record of the application.
 | `status` | enum | One of: Wishlist, Actively Planning, Booked, Completed, Cancelled |
 | `priority` | enum | One of: Must-do, Want-to, Nice-to-have |
 | `trip_types` | string (JSON array) | User-defined tags (e.g. Camping, Family, Culture) — autocompletes from all previous values, stored as Title Case |
+| `activity_level` | int | Required physicality scale from 1-5 (1 = low physical demand, 5 = high physical demand) |
 | `travel_time_hours` | float | Transit time each way (hours) |
 | `duration_days` | float | Time spent at the location (days) |
 | `total_trip_length` | — | **Derived, not stored:** `duration_days` days + (`travel_time_hours` × 2) hours (convert >24 hour travel times to days, leaving the partial day hours remainder)|
@@ -138,6 +139,7 @@ Only shown when at least one person is tagged and all trip cost items use a sing
 - If both are provided, `target_date_start <= target_date_end` is required.
 - `travel_time_hours` must be `>= 0`.
 - `duration_days` must be `>= 0`.
+- `activity_level` is required and must be between `1` and `5` (inclusive).
 - `amount` must be `>= 0`.
 - `distance_min` / `distance_max` query params must be `>= 0`; if both are present, `distance_min <= distance_max`.
 - `currency`, when provided, must be a 3-letter uppercase code.
@@ -153,13 +155,14 @@ Only shown when at least one person is tagged and all trip cost items use a sing
 - **Filter by Status** — multi-select chips (Wishlist, Actively Planning, Booked, Completed, Cancelled)
 - **Filter by Priority** — multi-select chips (Must-do, Want-to, Nice-to-have)
 - **Filter by Trip Type** — multi-select chips drawn from all known trip types
+- **Filter by Activity Level** — multi-select values from the fixed 1-5 scale
 - **Filter by Distance** — min/max numeric range inputs (miles); filters against persisted `distance_miles`
 - **Search** — matches against trip title or location name (case-insensitive)
 
-For multi-select filters (`status`, `priority`, `trip_type`), API encoding is **repeated query params**:
+For multi-select filters (`status`, `priority`, `trip_type`, `activity_level`), API encoding is **repeated query params**:
 
 ```
-GET /trips?status=Wishlist&status=Booked&priority=Must-do
+GET /trips?status=Wishlist&status=Booked&priority=Must-do&activity_level=2&activity_level=4
 ```
 
 **Default sort:** Priority tier (Must-do → Want-to → Nice-to-have), then by distance ascending within tier.
@@ -168,7 +171,7 @@ GET /trips?status=Wishlist&status=Booked&priority=Must-do
 
 `GET /export` returns a single JSON document containing all trips (with nested cost items, people, and comments), the people roster, and settings. Export payload includes `schema_version` and `exported_at` metadata for forward compatibility. The Angular Settings page offers a download button that triggers this and saves the file as `vacations-export-YYYY-MM-DD.json`.
 
-Import/restore is explicitly out of scope for MVP.
+`POST /export/restore` accepts an exported JSON file, validates the payload/schema version before mutation, wipes existing data, and restores trips/people/settings in one transactional operation.
 
 ---
 
@@ -259,12 +262,11 @@ VacationBucketList/
     │   └── settings.spec.ts
     └── angular.json                # Updated to include proxy.conf.json
 ```
-
 ### API Routes
 
 | Method | Path | Purpose |
 |---|---|---|
-| `GET` | `/trips` | List trips; query params: repeated `status`, repeated `priority`, repeated `trip_type`, `distance_min`, `distance_max`, `search`, optional `target_date_start`, `target_date_end` |
+| `GET` | `/trips` | List trips; query params: repeated `status`, repeated `priority`, repeated `trip_type`, repeated `activity_level`, `distance_min`, `distance_max`, `search`, optional `target_date_start`, `target_date_end` |
 | `POST` | `/trips` | Create trip; triggers distance calc; normalizes Title Case fields |
 | `GET` | `/trips/{id}` | Single trip with nested cost items, people, and comments |
 | `PUT` | `/trips/{id}` | Update trip; re-runs distance calc if location or origin changed |
@@ -308,8 +310,9 @@ ng serve
 2. Add a trip in the Angular UI and confirm `distance_miles` populates.
 3. Add two trips with the same Trip Type — confirm autocomplete returns the shared value in Title Case.
 4. Apply distance filter — confirm only trips within the range appear.
-5. Click Export in Settings — confirm valid JSON downloads with all data.
-6. Swap the SQLite repository for an in-memory dict stub to confirm the abstraction layer is clean.
+5. Apply activity-level filter (e.g. `activity_level=4`) — confirm only matching trips appear.
+6. Click Export in Settings — confirm valid JSON downloads with all data.
+7. Swap the SQLite repository for an in-memory dict stub to confirm the abstraction layer is clean.
 
 ---
 
@@ -358,10 +361,13 @@ Each test module uses an **in-memory SQLite database** via a dependency override
 - Status filter: create Wishlist and Booked trips; `GET /trips?status=Wishlist` returns only the Wishlist one
 - Priority filter: create Must-do and Nice-to-have trips; filter returns only the correct tier
 - Trip type filter: two trips with different types; filter by one type returns only the matching trip
+- Activity-level filter: trips at level 2 and 5; `GET /trips?activity_level=5` returns only level 5
 - Multi-select repeated params: `GET /trips?status=Wishlist&status=Booked` returns trips in either status
+- Multi-select repeated activity-level params: `GET /trips?activity_level=2&activity_level=5` returns trips in either level
 - Distance filter: trips at 50 mi and 300 mi; `GET /trips?distance_min=100&distance_max=400` returns only the 300 mi trip
 - Search: case-insensitive match on title and location; non-matching query returns empty list
 - Combined filters (status + priority) apply AND logic
+- Validation: creating/updating with `activity_level` outside 1-5 returns 422
 
 #### `tests/test_trips.py` — Default sort order
 - Create trips across all three priority tiers; `GET /trips` returns them in Must-do → Want-to → Nice-to-have order, with distance ascending within each tier

@@ -89,6 +89,7 @@ def trip_to_response(
         status=cast(TripStatus, trip.status),
         priority=cast(TripPriority, trip.priority),
         trip_types=trip_types,
+        activity_level=trip.activity_level,
         travel_time_hours=trip.travel_time_hours,
         duration_days=trip.duration_days,
         total_trip_length=_build_total_trip_length(trip.duration_days, trip.travel_time_hours),
@@ -173,6 +174,7 @@ def list_trips(
     status: Annotated[list[str] | None, Query()] = None,
     priority: Annotated[list[str] | None, Query()] = None,
     trip_type: Annotated[list[str] | None, Query()] = None,
+    activity_level: Annotated[list[int] | None, Query()] = None,
     distance_min: Annotated[float | None, Query(ge=0)] = None,
     distance_max: Annotated[float | None, Query(ge=0)] = None,
     search: Annotated[str | None, Query()] = None,
@@ -182,6 +184,13 @@ def list_trips(
     status = status or []
     priority = priority or []
     trip_type = trip_type or []
+    activity_level = activity_level or []
+
+    if any(level < 1 or level > 5 for level in activity_level):
+        raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST,
+            detail="activity_level values must be between 1 and 5",
+        )
 
     if distance_min is not None and distance_max is not None and distance_min > distance_max:
         raise HTTPException(
@@ -193,6 +202,7 @@ def list_trips(
         statuses=status,
         priorities=priority,
         trip_types=trip_type,
+        activity_levels=activity_level,
         distance_min=distance_min,
         distance_max=distance_max,
         search=search,

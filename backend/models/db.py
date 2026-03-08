@@ -37,6 +37,7 @@ class Trip(Base):
     status: Mapped[str] = mapped_column(String(64), nullable=False)
     priority: Mapped[str] = mapped_column(String(64), nullable=False)
     trip_types: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
+    activity_level: Mapped[int] = mapped_column(Integer, nullable=False)
     travel_time_hours: Mapped[float] = mapped_column(Float, default=0, nullable=False)
     duration_days: Mapped[float] = mapped_column(Float, default=0, nullable=False)
     target_date_start: Mapped[date | None] = mapped_column(Date, nullable=True)

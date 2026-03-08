@@ -10,6 +10,7 @@ def _create_trip_payload() -> dict:
         "status": "Wishlist",
         "priority": "Must-do",
         "trip_types": ["camping", "family"],
+        "activity_level": 3,
         "travel_time_hours": 3,
         "duration_days": 7,
         "target_date_range": "summer 2027",
@@ -30,6 +31,7 @@ def test_trip_crud_flow(client: TestClient) -> None:
     trip_id = created["id"]
     assert created["distance_miles"] == pytest.approx(100.0)
     assert created["trip_types"] == ["Camping", "Family"]
+    assert created["activity_level"] == 3
     assert created["target_date_range"] == "Summer 2027"
     assert created["total_trip_length"] == "7 days, 6 hours"
 
@@ -90,6 +92,7 @@ def test_trip_filters_and_sort(client: TestClient) -> None:
     payload_two["status"] = "Booked"
     payload_two["priority"] = "Nice-to-have"
     payload_two["trip_types"] = ["Culture"]
+    payload_two["activity_level"] = 5
 
     assert client.post("/trips", json=payload_one).status_code == 201
     assert client.post("/trips", json=payload_two).status_code == 201
@@ -108,6 +111,46 @@ def test_trip_filters_and_sort(client: TestClient) -> None:
     assert trip_type_filtered.status_code == 200
     assert len(trip_type_filtered.json()) == 1
 
+    activity_level_filtered = client.get("/trips", params=[("activity_level", 5)])
+    assert activity_level_filtered.status_code == 200
+    assert len(activity_level_filtered.json()) == 1
+
+    multi_activity_level_filtered = client.get(
+        "/trips", params=[("activity_level", 3), ("activity_level", 5)]
+    )
+    assert multi_activity_level_filtered.status_code == 200
+    assert len(multi_activity_level_filtered.json()) == 2
+
     search_filtered = client.get("/trips", params={"search": "tokyo"})
     assert search_filtered.status_code == 200
     assert len(search_filtered.json()) == 2
+
+
+def test_trip_requires_activity_level(client: TestClient) -> None:
+    payload = _create_trip_payload()
+    del payload["activity_level"]
+
+    response = client.post("/trips", json=payload)
+
+    assert response.status_code == 422
+
+
+def test_trip_activity_level_range_validation(client: TestClient) -> None:
+    too_low_payload = _create_trip_payload()
+    too_low_payload["activity_level"] = 0
+    too_low_response = client.post("/trips", json=too_low_payload)
+    assert too_low_response.status_code == 422
+
+    too_high_payload = _create_trip_payload()
+    too_high_payload["activity_level"] = 6
+    too_high_response = client.post("/trips", json=too_high_payload)
+    assert too_high_response.status_code == 422
+
+
+def test_trip_update_activity_level_range_validation(client: TestClient) -> None:
+    create_response = client.post("/trips", json=_create_trip_payload())
+    trip_id = create_response.json()["id"]
+
+    response = client.put(f"/trips/{trip_id}", json={"activity_level": 9})
+
+    assert response.status_code == 422
