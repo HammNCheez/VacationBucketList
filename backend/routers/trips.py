@@ -9,6 +9,9 @@ from sqlalchemy.orm import Session
 from database.connection import get_db
 from models.db import Trip
 from models.schemas import (
+    CommentRead,
+    CostItemRead,
+    PersonRead,
     TripCreate,
     TripMutationResponse,
     TripPriority,
@@ -75,6 +78,9 @@ def trip_to_response(
 ) -> TripMutationResponse:
     trip_types = trip_types_from_db(trip.trip_types)
     per_person_cost, per_person_currency = _build_per_person_cost(trip)
+    cost_items = [CostItemRead.model_validate(item) for item in trip.cost_items]
+    comments = [CommentRead.model_validate(item) for item in trip.comments]
+    people = [PersonRead.model_validate(person) for person in trip.people]
 
     return TripMutationResponse(
         id=trip.id,
@@ -99,9 +105,9 @@ def trip_to_response(
         notes=trip.notes,
         created_at=trip.created_at,
         updated_at=trip.updated_at,
-        cost_items=trip.cost_items,
-        comments=trip.comments,
-        people=trip.people,
+        cost_items=cost_items,
+        comments=comments,
+        people=people,
         per_person_cost=per_person_cost,
         per_person_currency=per_person_currency,
         warnings=warnings or [],
