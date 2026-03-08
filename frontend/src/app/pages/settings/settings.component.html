@@ -1,0 +1,26 @@
+<section class="page">
+  <h1>Settings</h1>
+
+  <mat-card>
+    <form [formGroup]="form" class="grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Home City</mat-label>
+        <input matInput formControlName="home_city" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Home ZIP</mat-label>
+        <input matInput formControlName="home_zip" />
+      </mat-form-field>
+    </form>
+
+    <div class="actions">
+      <button mat-flat-button color="primary" [disabled]="saving" (click)="save()">Save</button>
+      <button mat-button (click)="exportData()">Export Data</button>
+    </div>
+
+    @if (message) {
+      <p>{{ message }}</p>
+    }
+  </mat-card>
+</section>

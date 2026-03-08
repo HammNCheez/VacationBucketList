@@ -1,0 +1,147 @@
+<section class="page">
+  <header class="page-header">
+    <h1>{{ tripId ? 'Edit Trip' : 'New Trip' }}</h1>
+  </header>
+
+  @if (errorMessage) {
+    <p class="error">{{ errorMessage }}</p>
+  }
+
+  <mat-card>
+    <form [formGroup]="form" class="grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Title</mat-label>
+        <input matInput formControlName="title" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Location</mat-label>
+        <input matInput formControlName="location" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Origin</mat-label>
+        <input matInput formControlName="origin" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          @for (status of statuses; track status) {
+            <mat-option [value]="status">{{ status }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Priority</mat-label>
+        <mat-select formControlName="priority">
+          @for (priority of priorities; track priority) {
+            <mat-option [value]="priority">{{ priority }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Activity Level (1-5)</mat-label>
+        <mat-select formControlName="activity_level">
+          @for (level of activityLevels; track level) {
+            <mat-option [value]="level">{{ level }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Trip Types (comma-separated)</mat-label>
+        <input matInput formControlName="trip_types_text" placeholder="Camping, Family" />
+      </mat-form-field>
+
+      <app-autocomplete-input
+        [label]="'Target Date Range'"
+        [options]="targetDateRangeOptions"
+        [control]="targetDateRangeControl"
+      />
+
+      <mat-form-field appearance="outline">
+        <mat-label>Travel Time (hours)</mat-label>
+        <input matInput type="number" formControlName="travel_time_hours" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Duration (days)</mat-label>
+        <input matInput type="number" formControlName="duration_days" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Target Start Date</mat-label>
+        <input matInput type="date" formControlName="target_date_start" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Target End Date</mat-label>
+        <input matInput type="date" formControlName="target_date_end" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="notes-field">
+        <mat-label>Notes</mat-label>
+        <textarea matInput rows="4" formControlName="notes"></textarea>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>People</mat-label>
+        <mat-select formControlName="person_ids" multiple>
+          @for (person of availablePeople; track person.id) {
+            <mat-option [value]="person.id">{{ person.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </form>
+
+    <section class="nested-section">
+      <h2>Cost Items</h2>
+      @for (group of costItemControls.controls; track $index) {
+        <div class="inline-row" [formGroup]="$any(group)">
+          <mat-form-field appearance="outline">
+            <mat-label>Category</mat-label>
+            <input matInput formControlName="category" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Amount</mat-label>
+            <input matInput type="number" formControlName="amount" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Currency</mat-label>
+            <input matInput formControlName="currency" />
+          </mat-form-field>
+          <button mat-button color="warn" (click)="removeCostItem($index)">Remove</button>
+        </div>
+      }
+      <button mat-button (click)="addCostItem()">Add Cost Item</button>
+    </section>
+
+    <section class="nested-section">
+      <h2>Comments</h2>
+      @for (group of commentControls.controls; track $index) {
+        <div class="inline-row" [formGroup]="$any(group)">
+          <mat-form-field appearance="outline">
+            <mat-label>Comment</mat-label>
+            <input matInput formControlName="body" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>URL</mat-label>
+            <input matInput formControlName="url" />
+          </mat-form-field>
+          <button mat-button color="warn" (click)="removeComment($index)">Remove</button>
+        </div>
+      }
+      <button mat-button (click)="addComment()">Add Comment</button>
+    </section>
+
+    <div class="actions">
+      <button mat-button (click)="cancel()">Cancel</button>
+      <button mat-flat-button color="primary" [disabled]="saving" (click)="save()">
+        {{ saving ? 'Saving...' : 'Save Trip' }}
+      </button>
+    </div>
+  </mat-card>
+</section>
