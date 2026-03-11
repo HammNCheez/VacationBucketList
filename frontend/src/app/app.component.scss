@@ -6,19 +6,73 @@
 	position: sticky;
 	top: 0;
 	z-index: 100;
+	padding: 0 0.6rem;
+	background:
+		linear-gradient(135deg, rgb(31 61 47 / 98%), rgb(60 94 69 / 95%)),
+		rgb(31 61 47 / 96%);
+	color: var(--topo-paper);
+	border-bottom: 1px solid rgb(240 223 186 / 42%);
+	box-shadow: 0 10px 20px rgb(28 44 36 / 22%);
+	backdrop-filter: blur(4px);
+	display: flex;
+	gap: 0.5rem;
 }
 
 .spacer {
 	flex: 1;
 }
 
+.nav-left,
+.nav-right {
+	display: flex;
+	align-items: center;
+	gap: 0.2rem;
+}
+
+.topbar a[mat-button],
+.topbar a[mat-icon-button] {
+	color: var(--topo-paper);
+}
+
+.brand-link {
+	font-family: 'Special Elite', 'Georgia', serif;
+	font-size: 1.05rem;
+	letter-spacing: 0.03em;
+}
+
+.nav-link {
+	font-weight: 600;
+}
+
+.nav-link .mat-icon {
+	margin-right: 0.3rem;
+	font-size: 20px;
+	width: 20px;
+	height: 20px;
+}
+
+.topbar a[mat-button]:hover,
+.topbar a[mat-icon-button]:hover {
+	background: rgb(240 223 186 / 16%);
+}
+
 .active-link {
 	font-weight: 700;
-	text-decoration: underline;
+	background: rgb(240 223 186 / 20%);
 }
 
 .content {
 	max-width: 1100px;
 	margin: 0 auto;
 	padding: 1rem;
+}
+
+@media (max-width: 720px) {
+	.brand-link {
+		font-size: 0.95rem;
+	}
+
+	.nav-link {
+		padding: 0 0.5rem;
+	}
 }

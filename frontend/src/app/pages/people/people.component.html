@@ -23,7 +23,7 @@
         @for (person of people; track person.id) {
           <li>
             <span>{{ person.name }}</span>
-            <button mat-button color="warn" (click)="deletePerson(person.id)">Delete</button>
+            <button mat-button color="warn" (click)="deletePerson(person)">Delete</button>
           </li>
         }
       </ul>

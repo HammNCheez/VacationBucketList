@@ -78,7 +78,7 @@
         <p>Distance: {{ trip.distance_miles ?? 'Unavailable' }}</p>
         <div class="trip-actions">
           <button mat-button color="primary" (click)="openEdit(trip.id)">Edit</button>
-          <button mat-button color="warn" (click)="deleteTrip(trip.id)">Delete</button>
+          <button mat-button color="warn" (click)="deleteTrip(trip)">Delete</button>
         </div>
       </mat-card>
     }

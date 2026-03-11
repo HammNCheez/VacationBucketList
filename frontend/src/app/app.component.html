@@ -1,9 +1,30 @@
-<mat-toolbar color="primary" class="topbar">
-  <span>{{ title }}</span>
+<mat-toolbar class="topbar">
+  <div class="nav-left">
+    <a class="brand-link" mat-button routerLink="/" aria-label="Home">{{ title }}</a>
+    <a class="nav-link" mat-button routerLink="/trips" routerLinkActive="active-link">
+      <mat-icon aria-hidden="true">explore</mat-icon>
+      <span>Trips</span>
+    </a>
+    <a class="nav-link" mat-button routerLink="/people" routerLinkActive="active-link">
+      <mat-icon aria-hidden="true">groups</mat-icon>
+      <span>People</span>
+    </a>
+  </div>
+
   <span class="spacer"></span>
-  <a mat-button routerLink="/trips" routerLinkActive="active-link">Trips</a>
-  <a mat-button routerLink="/people" routerLinkActive="active-link">People</a>
-  <a mat-button routerLink="/settings" routerLinkActive="active-link">Settings</a>
+
+  <div class="nav-right">
+    <a
+      class="settings-link"
+      mat-icon-button
+      routerLink="/settings"
+      routerLinkActive="active-link"
+      aria-label="Settings"
+      title="Settings"
+    >
+      <mat-icon aria-hidden="true">settings</mat-icon>
+    </a>
+  </div>
 </mat-toolbar>
 
 <main class="content">

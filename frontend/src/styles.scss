@@ -1,18 +1,49 @@
 @use '@angular/material' as mat;
+@import url('https://fonts.googleapis.com/css2?family=Chivo:wght@400;600;700&family=Special+Elite&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 
 html {
 	@include mat.theme(
 		(
-			color: mat.$azure-palette,
-			typography: Roboto,
+			color: mat.$green-palette,
+			typography: 'Chivo',
 			density: 0,
 		)
 	);
 }
 
+:root {
+	--topo-forest: #1f3d2f;
+	--topo-moss: #3c5e45;
+	--topo-sand: #f0dfba;
+	--topo-dusk: #9f6f2c;
+	--topo-paper: #f9f5e8;
+	--topo-ink: #1c2c24;
+}
+
 body {
 	margin: 0;
-	font-family: Roboto, 'Helvetica Neue', sans-serif;
-	background: #f4f6f8;
+	font-family: 'Chivo', 'Segoe UI', sans-serif;
+	color: var(--topo-ink);
+	background-color: var(--topo-paper);
+	background-image:
+		linear-gradient(135deg, rgb(249 245 232 / 85%), rgb(240 223 186 / 72%)),
+		url('/map-bg.svg');
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
+	min-height: 100vh;
+}
+
+h1,
+h2,
+h3 {
+	font-family: 'Special Elite', 'Georgia', serif;
+	letter-spacing: 0.04em;
+}
+
+mat-card {
+	background: rgb(249 245 232 / 92%) !important;
+	backdrop-filter: blur(2px);
 }
 /* You can add global styles to this file, and also import other style files */

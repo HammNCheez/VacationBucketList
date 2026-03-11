@@ -27,6 +27,7 @@ import {
 import { PeopleService } from '../../core/services/people.service';
 import { TripService } from '../../core/services/trip.service';
 import { AutocompleteInputComponent } from '../../shared/autocomplete-input/autocomplete-input.component';
+import { ConfirmDialogService } from '../../shared/confirm-dialog/confirm-dialog.service';
 
 @Component({
   selector: 'app-trip-detail',
@@ -88,7 +89,8 @@ export class TripDetailComponent implements OnInit {
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly tripService: TripService,
-    private readonly peopleService: PeopleService
+    private readonly peopleService: PeopleService,
+    private readonly confirmDialog: ConfirmDialogService
   ) {}
 
   ngOnInit(): void {
@@ -122,7 +124,20 @@ export class TripDetailComponent implements OnInit {
   }
 
   removeCostItem(index: number): void {
-    this.costItems.removeAt(index);
+    const category = this.costItems.at(index).get('category')?.value as string | null;
+    const itemName = category?.trim() ? `cost item ${category.trim()}` : 'this cost item';
+
+    this.confirmDialog
+      .confirm({
+        message: `Are you sure you want to delete ${itemName}?`,
+      })
+      .subscribe((confirmed) => {
+        if (!confirmed) {
+          return;
+        }
+
+        this.costItems.removeAt(index);
+      });
   }
 
   addComment(): void {
@@ -135,7 +150,20 @@ export class TripDetailComponent implements OnInit {
   }
 
   removeComment(index: number): void {
-    this.comments.removeAt(index);
+    const body = this.comments.at(index).get('body')?.value as string | null;
+    const label = body?.trim() ? `comment \"${body.trim()}\"` : 'this comment';
+
+    this.confirmDialog
+      .confirm({
+        message: `Are you sure you want to delete ${label}?`,
+      })
+      .subscribe((confirmed) => {
+        if (!confirmed) {
+          return;
+        }
+
+        this.comments.removeAt(index);
+      });
   }
 
   save(): void {

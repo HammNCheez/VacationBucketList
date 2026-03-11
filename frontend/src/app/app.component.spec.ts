@@ -26,6 +26,15 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('mat-toolbar span')?.textContent).toContain('Vacation Bucket List');
+    expect(compiled.querySelector('.brand-link')?.textContent).toContain('Vacation Bucket List');
+    expect(compiled.querySelector('.brand-link')?.getAttribute('href')).toBe('/');
+  });
+
+  it('should render settings as an icon button with accessible label', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const settingsLink = compiled.querySelector('.settings-link');
+    expect(settingsLink?.getAttribute('aria-label')).toBe('Settings');
   });
 });

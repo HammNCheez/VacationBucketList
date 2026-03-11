@@ -8,6 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 
 import { Person } from '../../core/models/person.model';
 import { PeopleService } from '../../core/services/people.service';
+import { ConfirmDialogService } from '../../shared/confirm-dialog/confirm-dialog.service';
 
 @Component({
   selector: 'app-people',
@@ -34,7 +35,8 @@ export class PeopleComponent implements OnInit {
   errorMessage = '';
 
   constructor(
-    private readonly peopleService: PeopleService
+    private readonly peopleService: PeopleService,
+    private readonly confirmDialog: ConfirmDialogService
   ) {}
 
   ngOnInit(): void {
@@ -63,13 +65,24 @@ export class PeopleComponent implements OnInit {
     });
   }
 
-  deletePerson(personId: number): void {
-    this.peopleService.delete(personId).subscribe({
-      next: () => this.loadPeople(),
-      error: () => {
-        this.errorMessage = 'Could not delete person.';
-      },
-    });
+  deletePerson(person: Person): void {
+    this.confirmDialog
+      .confirm({
+        message: `Are you sure you want to delete ${person.name}?`,
+        detail: `${person.name} will be removed from all trips they are associated with.`,
+      })
+      .subscribe((confirmed) => {
+        if (!confirmed) {
+          return;
+        }
+
+        this.peopleService.delete(person.id).subscribe({
+          next: () => this.loadPeople(),
+          error: () => {
+            this.errorMessage = 'Could not delete person.';
+          },
+        });
+      });
   }
 
   private loadPeople(): void {

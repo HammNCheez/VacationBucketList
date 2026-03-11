@@ -2,7 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { finalize } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { filter, finalize, switchMap } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -13,6 +14,7 @@ import { MatIconModule } from '@angular/material/icon';
 
 import { Trip, TripPriority, TripStatus } from '../../core/models/trip.model';
 import { TripService } from '../../core/services/trip.service';
+import { ConfirmDialogService } from '../../shared/confirm-dialog/confirm-dialog.service';
 
 @Component({
   selector: 'app-trip-list',
@@ -59,7 +61,8 @@ export class TripListComponent implements OnInit {
 
   constructor(
     private readonly tripService: TripService,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly confirmDialog: ConfirmDialogService
   ) {}
 
   ngOnInit(): void {
@@ -111,12 +114,31 @@ export class TripListComponent implements OnInit {
     void this.router.navigate(['/trips', tripId]);
   }
 
-  deleteTrip(tripId: number): void {
-    this.tripService.deleteTrip(tripId).subscribe({
-      next: () => this.loadTrips(),
-      error: () => {
-        this.errorMessage = 'Could not delete trip.';
-      },
-    });
+  deleteTrip(trip: Trip): void {
+    this.confirmDialog
+      .confirm({
+        message: `Are you sure you want to delete ${trip.title}?`,
+      })
+      .pipe(
+        switchMap((confirmed) => {
+          if (!confirmed) {
+            return of(false);
+          }
+
+          return this.confirmDialog.confirm({
+            message: `Are you sure you want to delete ${trip.title}?`,
+            detail: `This action is permanent. Please confirm again to delete ${trip.title}.`,
+            confirmDelaySeconds: 3,
+          });
+        }),
+        filter((confirmed) => confirmed),
+        switchMap(() => this.tripService.deleteTrip(trip.id))
+      )
+      .subscribe({
+        next: () => this.loadTrips(),
+        error: () => {
+          this.errorMessage = 'Could not delete trip.';
+        },
+      });
   }
 }

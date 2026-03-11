@@ -1,0 +1,21 @@
+<h2 mat-dialog-title>Confirm Delete</h2>
+
+<mat-dialog-content>
+  <p class="message">{{ data.message }}</p>
+  @if (data.detail) {
+    <p class="detail">{{ data.detail }}</p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="onCancel()">{{ data.cancelText }}</button>
+  <button
+    mat-flat-button
+    color="warn"
+    type="button"
+    [disabled]="isConfirmDisabled"
+    (click)="onConfirm()"
+  >
+    {{ confirmLabel }}
+  </button>
+</mat-dialog-actions>
