@@ -7,8 +7,10 @@
 	top: 0;
 	z-index: 100;
 	padding: 0 0.6rem;
+	overflow: hidden;
+	isolation: isolate;
 	background:
-		linear-gradient(135deg, rgb(31 61 47 / 98%), rgb(60 94 69 / 95%)),
+		linear-gradient(180deg, rgb(25 50 41 / 98%) 0%, rgb(45 77 60 / 96%) 72%, rgb(68 104 79 / 94%) 100%),
 		rgb(31 61 47 / 96%);
 	color: var(--topo-paper);
 	border-bottom: 1px solid rgb(240 223 186 / 42%);
@@ -16,6 +18,68 @@
 	backdrop-filter: blur(4px);
 	display: flex;
 	gap: 0.5rem;
+}
+
+.topbar::before,
+.topbar::after {
+	content: '';
+	position: absolute;
+	inset: auto -2% 0;
+	pointer-events: none;
+	z-index: 0;
+}
+
+.topbar::before {
+	height: 68%;
+	background: linear-gradient(180deg, rgb(17 36 30 / 20%), rgb(17 36 30 / 52%));
+	clip-path: polygon(
+		0% 100%,
+		4% 84%,
+		8% 61%,
+		12% 79%,
+		17% 48%,
+		22% 74%,
+		28% 36%,
+		34% 71%,
+		41% 30%,
+		49% 69%,
+		57% 42%,
+		65% 75%,
+		74% 38%,
+		82% 73%,
+		90% 45%,
+		96% 66%,
+		100% 100%
+	);
+}
+
+.topbar::after {
+	height: 52%;
+	background: linear-gradient(180deg, rgb(117 158 119 / 16%), rgb(117 158 119 / 38%));
+	clip-path: polygon(
+		0% 100%,
+		5% 88%,
+		10% 74%,
+		16% 90%,
+		23% 62%,
+		30% 88%,
+		38% 58%,
+		46% 91%,
+		55% 63%,
+		64% 89%,
+		73% 59%,
+		82% 90%,
+		91% 66%,
+		97% 82%,
+		100% 100%
+	);
+}
+
+.nav-left,
+.spacer,
+.nav-right {
+	position: relative;
+	z-index: 1;
 }
 
 .spacer {
