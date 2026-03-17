@@ -29,5 +29,5 @@ def update_settings(
     payload: SettingsUpdate,
     repository: Annotated[SettingsRepository, Depends(get_settings_repository)],
 ) -> SettingsRead:
-    settings = repository.update(payload.home_city, payload.home_zip)
+    settings = repository.update(payload.home_city, payload.home_zip, payload.ors_api_key)
     return SettingsRead.model_validate(settings)

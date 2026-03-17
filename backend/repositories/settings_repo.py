@@ -11,7 +11,9 @@ class SettingsRepository(ISettingsRepository):
     def get(self) -> Settings | None:
         return self.db.query(Settings).filter(Settings.id == 1).first()
 
-    def update(self, home_city: str | None, home_zip: str | None) -> Settings:
+    def update(
+        self, home_city: str | None, home_zip: str | None, ors_api_key: str | None
+    ) -> Settings:
         settings = self.get()
         if settings is None:
             # Settings is a singleton row; id=1 is the single allowed record.
@@ -20,6 +22,7 @@ class SettingsRepository(ISettingsRepository):
 
         settings.home_city = home_city
         settings.home_zip = home_zip
+        settings.ors_api_key = ors_api_key
         self.db.commit()
         self.db.refresh(settings)
         return settings

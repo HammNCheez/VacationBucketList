@@ -1,5 +1,7 @@
 <section class="page">
-  <h1>Settings</h1>
+  <header class="page-header">
+    <h1>Settings</h1>
+  </header>
 
   <mat-card>
     <form [formGroup]="form" class="grid">
@@ -12,6 +14,11 @@
         <mat-label>Home ZIP</mat-label>
         <input matInput formControlName="home_zip" />
       </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>OpenRouteService API Key</mat-label>
+        <input matInput formControlName="ors_api_key" />
+      </mat-form-field>
     </form>
 
     <div class="actions">
@@ -21,6 +28,28 @@
 
     @if (message) {
       <p>{{ message }}</p>
+    }
+  </mat-card>
+
+  <mat-card>
+    <h2>Restore Data</h2>
+    <p class="restore-help">
+      Upload a previously exported JSON file to restore trips, people, and settings.
+    </p>
+
+    <div class="restore-controls">
+      <input type="file" accept="application/json,.json" (change)="onRestoreFileSelected($event)" />
+      <button mat-flat-button color="primary" [disabled]="restoring || !selectedRestoreFile" (click)="restoreFromFile()">
+        {{ restoring ? 'Restoring...' : 'Restore from File' }}
+      </button>
+    </div>
+
+    @if (restoreMessage) {
+      <p class="restore-success">{{ restoreMessage }}</p>
+    }
+
+    @if (restoreError) {
+      <p class="restore-error">{{ restoreError }}</p>
     }
   </mat-card>
 </section>

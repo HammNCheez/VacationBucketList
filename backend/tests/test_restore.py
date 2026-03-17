@@ -14,7 +14,11 @@ def _restore_payload(schema_version: str = "1.0") -> dict:
         "schema_version": schema_version,
         "exported_at": exported_at,
         "people": [{"id": 11, "name": "Alex"}],
-        "settings": {"home_city": "Raleigh", "home_zip": "27601"},
+        "settings": {
+            "home_city": "Raleigh",
+            "home_zip": "27601",
+            "ors_api_key": "restored-ors-key",
+        },
         "trips": [
             {
                 "id": 21,
@@ -107,7 +111,11 @@ def test_restore_replaces_existing_database_data(client: TestClient) -> None:
 
     settings_response = client.get("/settings")
     assert settings_response.status_code == 200
-    assert settings_response.json() == {"home_city": "Raleigh", "home_zip": "27601"}
+    assert settings_response.json() == {
+        "home_city": "Raleigh",
+        "home_zip": "27601",
+        "ors_api_key": "restored-ors-key",
+    }
 
 
 def test_restore_invalid_payload_does_not_wipe_database(client: TestClient) -> None:
@@ -129,7 +137,7 @@ def test_restore_invalid_payload_does_not_wipe_database(client: TestClient) -> N
         "schema_version": "1.0",
         "exported_at": datetime.now(timezone.utc).isoformat(),
         "people": [],
-        "settings": {"home_city": None, "home_zip": None},
+        "settings": {"home_city": None, "home_zip": None, "ors_api_key": None},
     }
 
     response = client.post(

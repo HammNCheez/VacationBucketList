@@ -177,6 +177,6 @@ describe('TripDetailComponent', () => {
         location: 'Norway',
       })
     );
-    expect(router.navigate).toHaveBeenCalledWith(['/trips']);
+    expect(router.navigate).toHaveBeenCalledWith(['/trips', 3]);
   });
 });

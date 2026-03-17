@@ -140,7 +140,11 @@ def _restore_trips(db: Session, payload: RestorePayload) -> None:
 
 
 def _restore_settings(db: Session, payload: RestorePayload) -> None:
-    if payload.settings.home_city is None and payload.settings.home_zip is None:
+    if (
+        payload.settings.home_city is None
+        and payload.settings.home_zip is None
+        and payload.settings.ors_api_key is None
+    ):
         return
 
     db.add(
@@ -148,5 +152,6 @@ def _restore_settings(db: Session, payload: RestorePayload) -> None:
             id=1,
             home_city=payload.settings.home_city,
             home_zip=payload.settings.home_zip,
+            ors_api_key=payload.settings.ors_api_key,
         )
     )

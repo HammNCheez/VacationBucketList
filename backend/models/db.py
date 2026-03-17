@@ -106,3 +106,4 @@ class Settings(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
     home_city: Mapped[str | None] = mapped_column(String(255), nullable=True)
     home_zip: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    ors_api_key: Mapped[str | None] = mapped_column(String(255), nullable=True)

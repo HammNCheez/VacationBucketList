@@ -1,53 +1,69 @@
 <section class="page">
   <header class="page-header">
     <h1>Trips</h1>
-    <button mat-flat-button color="primary" (click)="openCreate()">Add Trip</button>
+    <button mat-flat-button color="primary" (click)="openCreate()">
+      <mat-icon>add</mat-icon>
+      Add Trip
+    </button>
   </header>
 
   <mat-card class="filters-card">
-    <form [formGroup]="filtersForm" class="filters-grid">
-      <mat-form-field appearance="outline">
-        <mat-label>Status</mat-label>
-        <mat-select formControlName="status" multiple>
-          @for (status of statuses; track status) {
-            <mat-option [value]="status">{{ status }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+    <form [formGroup]="filtersForm">
+      <!-- Row 1: Search -->
+      <div class="search-row">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search trips</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput formControlName="search" placeholder="Search by title, location, notes..." />
+        </mat-form-field>
+      </div>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Priority</mat-label>
-        <mat-select formControlName="priority" multiple>
-          @for (priority of priorities; track priority) {
-            <mat-option [value]="priority">{{ priority }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      <!-- Row 2: Filter dropdowns + distance slider -->
+      <div class="filter-row">
+        <mat-form-field appearance="outline" class="filter-select">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status" multiple>
+            @for (status of statuses; track status) {
+              <mat-option [value]="status">{{ status }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Activity Level</mat-label>
-        <mat-select formControlName="activity_level" multiple>
-          @for (level of activityLevels; track level) {
-            <mat-option [value]="level">{{ level }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+        <mat-form-field appearance="outline" class="filter-select">
+          <mat-label>Priority</mat-label>
+          <mat-select formControlName="priority" multiple>
+            @for (priority of priorities; track priority) {
+              <mat-option [value]="priority">{{ priority }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Search</mat-label>
-        <input matInput formControlName="search" />
-      </mat-form-field>
+        <mat-form-field appearance="outline" class="filter-select">
+          <mat-label>Activity Level</mat-label>
+          <mat-select formControlName="activity_level" multiple>
+            @for (level of activityLevels; track level) {
+              <mat-option [value]="level">{{ level }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Min Distance (miles)</mat-label>
-        <input matInput type="number" formControlName="distance_min" />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Max Distance (miles)</mat-label>
-        <input matInput type="number" formControlName="distance_max" />
-      </mat-form-field>
+        <div class="distance-slider-group">
+          <label class="slider-label">Distance</label>
+          <mat-slider
+            [min]="sliderMin"
+            [max]="sliderMax"
+            [step]="10"
+            discrete
+            [displayWith]="sliderLabel"
+          >
+            <input matSliderStartThumb formControlName="distance_min" />
+            <input matSliderEndThumb formControlName="distance_max" />
+          </mat-slider>
+          <span class="slider-range">{{ distanceRangeLabel }}</span>
+        </div>
+      </div>
     </form>
+
     <div class="actions">
       <button mat-button (click)="clearFilters()">Clear</button>
       <button mat-flat-button color="primary" (click)="loadTrips()">Apply Filters</button>
@@ -64,23 +80,93 @@
     <p class="error">{{ errorMessage }}</p>
   }
 
-  @if (!loading && !errorMessage && trips.length === 0) {
-    <p class="empty">No trips yet.</p>
+  @if (!loading && !errorMessage && dataSource.data.length === 0) {
+    <div class="empty-state">
+      <mat-icon class="empty-icon">flight_takeoff</mat-icon>
+      <p>No trips yet. Start planning your first adventure!</p>
+    </div>
   }
 
-  <div class="trip-grid">
-    @for (trip of trips; track trip.id) {
-      <mat-card class="trip-card">
-        <h2>{{ trip.title }}</h2>
-        <p>{{ trip.location }}</p>
-        <p>Priority: {{ trip.priority }}</p>
-        <p>Activity: {{ trip.activity_level }}/5</p>
-        <p>Distance: {{ trip.distance_miles ?? 'Unavailable' }}</p>
-        <div class="trip-actions">
-          <button mat-button color="primary" (click)="openEdit(trip.id)">Edit</button>
-          <button mat-button color="warn" (click)="deleteTrip(trip)">Delete</button>
-        </div>
-      </mat-card>
-    }
-  </div>
+  @if (!loading && dataSource.data.length > 0) {
+    <div class="table-container">
+      <table mat-table [dataSource]="dataSource" matSort class="trips-table">
+        <!-- Title -->
+        <ng-container matColumnDef="title">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Title</th>
+          <td mat-cell *matCellDef="let trip">
+            <a class="trip-link" (click)="openView(trip.id)">{{ trip.title }}</a>
+          </td>
+        </ng-container>
+
+        <!-- Location -->
+        <ng-container matColumnDef="location">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Location</th>
+          <td mat-cell *matCellDef="let trip">{{ trip.location }}</td>
+        </ng-container>
+
+        <!-- Status -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+          <td mat-cell *matCellDef="let trip">
+            <span [class]="statusClass(trip.status)">{{ trip.status }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Priority -->
+        <ng-container matColumnDef="priority">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Priority</th>
+          <td mat-cell *matCellDef="let trip">
+            <span [class]="priorityClass(trip.priority)">{{ trip.priority }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Activity Level -->
+        <ng-container matColumnDef="activity_level">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Activity</th>
+          <td mat-cell *matCellDef="let trip" [matTooltip]="trip.activity_level + '/5'">
+            <span class="activity-rating">
+              @for (n of [1,2,3,4,5]; track n) {
+                <span [class.dim]="n > trip.activity_level">🔥</span>
+              }
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Target Start Date -->
+        <ng-container matColumnDef="target_date_start">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Start Date</th>
+          <td mat-cell *matCellDef="let trip">{{ formatDate(trip.target_date_start) }}</td>
+        </ng-container>
+
+        <!-- Travel Time -->
+        <ng-container matColumnDef="travel_time_hours">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Travel Time</th>
+          <td mat-cell *matCellDef="let trip">{{ formatTravelTime(trip.travel_time_hours) }}</td>
+        </ng-container>
+
+        <!-- Actions -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let trip">
+            <div class="row-actions">
+              <button mat-icon-button (click)="openView(trip.id); $event.stopPropagation()" matTooltip="View">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="deleteTrip(trip); $event.stopPropagation()" matTooltip="Delete">
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: displayedColumns;"
+          class="trip-row"
+          (click)="openView(row.id)"
+        ></tr>
+      </table>
+    </div>
+  }
 </section>

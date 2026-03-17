@@ -1,10 +1,8 @@
-import os
 from dataclasses import dataclass
 
 import httpx
-from dotenv import load_dotenv
 
-load_dotenv()
+from repositories.settings_repo import SettingsRepository
 
 
 class DistanceUnavailableError(Exception):
@@ -21,8 +19,15 @@ class DistanceResult:
 
 
 class DistanceService:
-    def __init__(self) -> None:
-        self.api_key = os.getenv("ORS_API_KEY")
+    def __init__(self, settings_repository: SettingsRepository) -> None:
+        self.settings_repository = settings_repository
+
+    @property
+    def api_key(self) -> str | None:
+        settings = self.settings_repository.get()
+        if not settings:
+            return None
+        return settings.ors_api_key
 
     def _require_key(self) -> None:
         if not self.api_key:

@@ -5,12 +5,14 @@ import { PeopleComponent } from './pages/people/people.component';
 import { SettingsComponent } from './pages/settings/settings.component';
 import { TripDetailComponent } from './pages/trip-detail/trip-detail.component';
 import { TripListComponent } from './pages/trip-list/trip-list.component';
+import { TripViewComponent } from './pages/trip-view/trip-view.component';
 
 export const routes: Routes = [
 	{ path: '', component: HomeComponent },
 	{ path: 'trips', component: TripListComponent },
 	{ path: 'trips/new', component: TripDetailComponent },
-	{ path: 'trips/:id', component: TripDetailComponent },
+	{ path: 'trips/:id', component: TripViewComponent },
+	{ path: 'trips/:id/edit', component: TripDetailComponent },
 	{ path: 'people', component: PeopleComponent },
 	{ path: 'settings', component: SettingsComponent },
 ];

@@ -69,5 +69,7 @@ class ISettingsRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def update(self, home_city: str | None, home_zip: str | None) -> Settings:
+    def update(
+        self, home_city: str | None, home_zip: str | None, ors_api_key: str | None
+    ) -> Settings:
         raise NotImplementedError

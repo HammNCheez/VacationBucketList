@@ -40,8 +40,10 @@ def get_settings_repository(db: Session = Depends(get_db)) -> SettingsRepository
     return SettingsRepository(db)
 
 
-def get_distance_service() -> DistanceService:
-    return DistanceService()
+def get_distance_service(
+    settings_repository: Annotated[SettingsRepository, Depends(get_settings_repository)],
+) -> DistanceService:
+    return DistanceService(settings_repository)
 
 
 def _format_number(value: float) -> str:

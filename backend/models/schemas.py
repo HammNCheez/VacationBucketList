@@ -69,11 +69,13 @@ class PersonRead(BaseModel):
 class SettingsUpdate(BaseModel):
     home_city: str | None = None
     home_zip: str | None = None
+    ors_api_key: str | None = None
 
 
 class SettingsRead(BaseModel):
     home_city: str | None = None
     home_zip: str | None = None
+    ors_api_key: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

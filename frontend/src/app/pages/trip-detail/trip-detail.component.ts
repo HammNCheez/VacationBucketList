@@ -12,6 +12,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 
@@ -38,6 +39,7 @@ import { ConfirmDialogService } from '../../shared/confirm-dialog/confirm-dialog
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,
+    MatIconModule,
     MatInputModule,
     MatSelectModule,
     AutocompleteInputComponent,
@@ -203,9 +205,13 @@ export class TripDetailComponent implements OnInit {
       : this.tripService.createTrip(payload as TripCreate);
 
     request$.subscribe({
-      next: () => {
+      next: (saved) => {
         this.saving = false;
-        void this.router.navigate(['/trips']);
+        if (this.tripId) {
+          void this.router.navigate(['/trips', this.tripId]);
+        } else {
+          void this.router.navigate(['/trips']);
+        }
       },
       error: (error) => {
         this.saving = false;
@@ -215,7 +221,11 @@ export class TripDetailComponent implements OnInit {
   }
 
   cancel(): void {
-    void this.router.navigate(['/trips']);
+    if (this.tripId) {
+      void this.router.navigate(['/trips', this.tripId]);
+    } else {
+      void this.router.navigate(['/trips']);
+    }
   }
 
   private loadPeople(): void {

@@ -6,6 +6,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 
+import { Settings } from '../../core/models/settings.model';
 import { SettingsService } from '../../core/services/settings.service';
 
 @Component({
@@ -28,10 +29,15 @@ export class SettingsComponent implements OnInit {
   readonly form = this.fb.group({
     home_city: [''],
     home_zip: [''],
+    ors_api_key: [''],
   });
 
   saving = false;
   message = '';
+  restoreMessage = '';
+  restoreError = '';
+  restoring = false;
+  selectedRestoreFile: File | null = null;
 
   constructor(
     private readonly settingsService: SettingsService
@@ -49,7 +55,7 @@ export class SettingsComponent implements OnInit {
     this.saving = true;
     this.message = '';
 
-    this.settingsService.updateSettings(this.form.getRawValue() as { home_city: string | null; home_zip: string | null }).subscribe({
+    this.settingsService.updateSettings(this.form.getRawValue() as Settings).subscribe({
       next: () => {
         this.saving = false;
         this.message = 'Settings saved.';
@@ -57,6 +63,35 @@ export class SettingsComponent implements OnInit {
       error: () => {
         this.saving = false;
         this.message = 'Could not save settings.';
+      },
+    });
+  }
+
+  onRestoreFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.selectedRestoreFile = input.files?.[0] ?? null;
+    this.restoreMessage = '';
+    this.restoreError = '';
+  }
+
+  restoreFromFile(): void {
+    if (!this.selectedRestoreFile) {
+      this.restoreError = 'Please choose an export JSON file first.';
+      return;
+    }
+
+    this.restoring = true;
+    this.restoreError = '';
+    this.restoreMessage = '';
+
+    this.settingsService.restoreData(this.selectedRestoreFile).subscribe({
+      next: (result) => {
+        this.restoring = false;
+        this.restoreMessage = `Restore complete: ${result.restored_trips} trips and ${result.restored_people} people.`;
+      },
+      error: () => {
+        this.restoring = false;
+        this.restoreError = 'Could not restore data from this file.';
       },
     });
   }

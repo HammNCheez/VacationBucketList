@@ -9,7 +9,7 @@ def test_export_empty(client: TestClient) -> None:
     assert "exported_at" in payload
     assert payload["trips"] == []
     assert payload["people"] == []
-    assert payload["settings"] == {"home_city": None, "home_zip": None}
+    assert payload["settings"] == {"home_city": None, "home_zip": None, "ors_api_key": None}
 
 
 def test_export_contains_nested_data(client: TestClient) -> None:
