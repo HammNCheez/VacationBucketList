@@ -1,4 +1,4 @@
-<section class="page">
+<section class="page-shell trip-view-page">
   <!-- Page header with back button, title, and edit button -->
   <header class="page-header">
     <button mat-button (click)="goBack()" class="back-btn">
@@ -19,7 +19,7 @@
   }
 
   @if (errorMessage) {
-    <p class="error">{{ errorMessage }}</p>
+    <p class="state-message error" role="alert" aria-live="assertive">{{ errorMessage }}</p>
   }
 
   @if (trip) {
@@ -111,14 +111,14 @@
     <mat-card class="section-card">
       <div class="section-header">
         <h2>Cost Items</h2>
-        <button mat-button (click)="toggleAddCostItem()">
+        <button mat-button type="button" (click)="toggleAddCostItem()">
           <mat-icon>{{ showAddCostItem ? 'close' : 'add' }}</mat-icon>
           {{ showAddCostItem ? 'Cancel' : 'Add' }}
         </button>
       </div>
 
       @if (showAddCostItem) {
-        <form [formGroup]="costItemForm" class="inline-add-form">
+        <form [formGroup]="costItemForm" class="inline-add-form" (ngSubmit)="saveCostItem()">
           <mat-form-field appearance="outline">
             <mat-label>Category</mat-label>
             <input matInput formControlName="category" />
@@ -131,7 +131,7 @@
             <mat-label>Currency</mat-label>
             <input matInput formControlName="currency" />
           </mat-form-field>
-          <button mat-flat-button color="primary" [disabled]="saving" (click)="saveCostItem()">
+          <button mat-flat-button color="primary" type="submit" [disabled]="saving">
             {{ saving ? 'Saving...' : 'Save' }}
           </button>
         </form>
@@ -147,7 +147,7 @@
             <div class="cost-row">
               <span class="cost-category">{{ item.category }}</span>
               <span class="cost-amount">{{ item.amount | currency:(item.currency ?? 'USD') }}</span>
-              <button mat-icon-button color="warn" (click)="removeCostItem($index)" matTooltip="Remove">
+              <button mat-icon-button color="warn" type="button" (click)="removeCostItem($index)" matTooltip="Remove" aria-label="Remove cost item">
                 <mat-icon>delete_outline</mat-icon>
               </button>
             </div>
@@ -166,23 +166,23 @@
     <mat-card class="section-card">
       <div class="section-header">
         <h2>Comments</h2>
-        <button mat-button (click)="toggleAddComment()">
+        <button mat-button type="button" (click)="toggleAddComment()">
           <mat-icon>{{ showAddComment ? 'close' : 'add' }}</mat-icon>
           {{ showAddComment ? 'Cancel' : 'Add' }}
         </button>
       </div>
 
       @if (showAddComment) {
-        <form [formGroup]="commentForm" class="inline-add-form">
+        <form [formGroup]="commentForm" class="inline-add-form" (ngSubmit)="saveComment()">
           <mat-form-field appearance="outline" class="comment-body-field">
             <mat-label>Comment</mat-label>
-            <input matInput formControlName="body" />
+            <textarea matInput formControlName="body" rows="3"></textarea>
           </mat-form-field>
           <mat-form-field appearance="outline">
             <mat-label>URL (optional)</mat-label>
             <input matInput formControlName="url" />
           </mat-form-field>
-          <button mat-flat-button color="primary" [disabled]="saving" (click)="saveComment()">
+          <button mat-flat-button color="primary" type="submit" [disabled]="saving">
             {{ saving ? 'Saving...' : 'Save' }}
           </button>
         </form>
@@ -199,7 +199,14 @@
               <div class="comment-body">
                 <span>{{ comment.body }}</span>
                 @if (comment.url) {
-                  <a [href]="comment.url" target="_blank" rel="noopener noreferrer" matTooltip="Open link" class="comment-link">
+                  <a
+                    [href]="comment.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    matTooltip="Open link"
+                    class="comment-link"
+                    aria-label="Open comment link in a new tab"
+                  >
                     <mat-icon>open_in_new</mat-icon>
                   </a>
                 }
@@ -207,7 +214,7 @@
               @if (comment.created_at) {
                 <span class="comment-date">{{ formatDate(comment.created_at) }}</span>
               }
-              <button mat-icon-button color="warn" (click)="removeComment($index)" matTooltip="Remove">
+              <button mat-icon-button color="warn" type="button" (click)="removeComment($index)" matTooltip="Remove" aria-label="Remove comment">
                 <mat-icon>delete_outline</mat-icon>
               </button>
             </div>

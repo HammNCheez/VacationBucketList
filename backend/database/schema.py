@@ -1,6 +1,5 @@
-from database.connection import engine
-from models.db import Base
+from database.migrations import run_migrations
 
 
 def init_db() -> None:
-    Base.metadata.create_all(bind=engine)
+    run_migrations()

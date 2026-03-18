@@ -1,19 +1,20 @@
-<section class="page">
+<section class="page-shell trip-detail-page">
   <header class="page-header">
-    <button mat-button (click)="cancel()" class="back-btn">
+    <button mat-button type="button" (click)="cancel()" class="back-btn">
       <mat-icon>arrow_back</mat-icon>
       {{ tripId ? 'Back to Trip' : 'Back to Trips' }}
     </button>
     <span class="header-spacer"></span>
-    <h1>{{ tripId ? 'Edit Trip' : 'New Trip' }}</h1>
+    <h1 class="page-title">{{ tripId ? 'Edit Trip' : 'New Trip' }}</h1>
   </header>
 
   @if (errorMessage) {
-    <p class="error">{{ errorMessage }}</p>
+    <p class="state-message error" role="alert" aria-live="assertive">{{ errorMessage }}</p>
   }
 
-  <mat-card>
-    <form [formGroup]="form" class="grid">
+  <mat-card class="surface-card">
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <div class="form-grid">
       <mat-form-field appearance="outline">
         <mat-label>Title</mat-label>
         <input matInput formControlName="title" />
@@ -100,10 +101,21 @@
           }
         </mat-select>
       </mat-form-field>
-    </form>
+    </div>
 
     <section class="nested-section">
-      <h2>Cost Items</h2>
+      <div class="section-header">
+        <h2 class="section-title">Cost Items</h2>
+        <button mat-button type="button" (click)="addCostItem()">
+          <mat-icon>add</mat-icon>
+          Add
+        </button>
+      </div>
+
+      @if (costItemControls.controls.length === 0) {
+        <p class="empty-hint">No cost items yet. Click Add to include one.</p>
+      }
+
       @for (group of costItemControls.controls; track $index) {
         <div class="inline-row" [formGroup]="$any(group)">
           <mat-form-field appearance="outline">
@@ -118,35 +130,49 @@
             <mat-label>Currency</mat-label>
             <input matInput formControlName="currency" />
           </mat-form-field>
-          <button mat-button color="warn" (click)="removeCostItem($index)">Remove</button>
+          <button mat-icon-button color="warn" type="button" (click)="removeCostItem($index)" aria-label="Remove cost item">
+            <mat-icon>delete_outline</mat-icon>
+          </button>
         </div>
       }
-      <button mat-button (click)="addCostItem()">Add Cost Item</button>
     </section>
 
     <section class="nested-section">
-      <h2>Comments</h2>
+      <div class="section-header">
+        <h2 class="section-title">Comments</h2>
+        <button mat-button type="button" (click)="addComment()">
+          <mat-icon>add</mat-icon>
+          Add
+        </button>
+      </div>
+
+      @if (commentControls.controls.length === 0) {
+        <p class="empty-hint">No comments yet. Click Add to include one.</p>
+      }
+
       @for (group of commentControls.controls; track $index) {
         <div class="inline-row" [formGroup]="$any(group)">
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="outline" class="comment-body-inline">
             <mat-label>Comment</mat-label>
-            <input matInput formControlName="body" />
+            <textarea matInput formControlName="body" rows="2"></textarea>
           </mat-form-field>
           <mat-form-field appearance="outline">
             <mat-label>URL</mat-label>
             <input matInput formControlName="url" />
           </mat-form-field>
-          <button mat-button color="warn" (click)="removeComment($index)">Remove</button>
+          <button mat-icon-button color="warn" type="button" (click)="removeComment($index)" aria-label="Remove comment">
+            <mat-icon>delete_outline</mat-icon>
+          </button>
         </div>
       }
-      <button mat-button (click)="addComment()">Add Comment</button>
     </section>
 
     <div class="actions">
-      <button mat-button (click)="cancel()">Cancel</button>
-      <button mat-flat-button color="primary" [disabled]="saving" (click)="save()">
+      <button mat-button type="button" (click)="cancel()">Cancel</button>
+      <button mat-flat-button color="primary" type="submit" [disabled]="saving">
         {{ saving ? 'Saving...' : 'Save Trip' }}
       </button>
     </div>
+    </form>
   </mat-card>
 </section>

@@ -1,38 +1,71 @@
-.page {
-  display: grid;
-  gap: 1.5rem;
+.people-page {
+  gap: var(--space-4);
 }
 
-.page-header {
+.people-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: var(--space-2);
+}
+
+.name-field {
+  min-width: 220px;
+}
+
+.list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: var(--space-2);
 }
 
-.row {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
+.count-pill {
+  min-width: 2.1rem;
+  text-align: center;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  background: rgb(60 94 69 / 14%);
+  color: var(--topo-moss);
+  font-weight: 700;
+  font-size: 0.83rem;
 }
 
-.grow {
-  flex: 1;
+.empty-state {
+  margin: 0;
+  color: var(--topo-muted);
+  font-style: italic;
 }
 
-.error {
-  color: #b3261e;
-}
-
-ul {
+.people-list {
   margin: 0;
   padding: 0;
   list-style: none;
+  display: grid;
+  gap: var(--space-1);
 }
 
-li {
+.people-list li {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #ddd;
-  padding: 0.5rem 0;
+  gap: var(--space-2);
+  border: 1px solid var(--topo-line);
+  border-radius: 10px;
+  padding: 0.55rem 0.65rem;
+  background: rgb(249 245 232 / 65%);
+}
+
+.person-name {
+  font-weight: 600;
+}
+
+@media (max-width: 680px) {
+  .people-form {
+    grid-template-columns: 1fr;
+  }
+
+  .people-form button {
+    justify-self: start;
+  }
 }

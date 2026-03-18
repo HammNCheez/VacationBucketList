@@ -132,11 +132,25 @@
 }
 
 @media (max-width: 720px) {
+	.content {
+		padding: 1.2rem 1rem 1.4rem;
+	}
+
 	.brand-link {
 		font-size: 0.95rem;
 	}
 
 	.nav-link {
 		padding: 0 0.5rem;
+	}
+}
+
+@media (max-width: 480px) {
+	.topbar {
+		padding: 0 0.25rem;
+	}
+
+	.content {
+		padding: 1rem 0.75rem 1.2rem;
 	}
 }

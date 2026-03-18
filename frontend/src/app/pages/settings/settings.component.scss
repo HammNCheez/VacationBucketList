@@ -1,17 +1,10 @@
-.page {
-  display: grid;
-  gap: 1.5rem;
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.settings-page {
+  gap: var(--space-4);
 }
 
 .grid {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-2);
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
@@ -22,28 +15,40 @@
 .actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 1rem;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+  flex-wrap: wrap;
 }
 
 .restore-help {
-  margin-top: 0;
-  color: #5b5b5b;
+  margin: 0 0 var(--space-3);
+  color: var(--topo-muted);
+  line-height: 1.5;
 }
 
 .restore-controls {
   display: flex;
-  gap: 0.75rem;
+  gap: var(--space-2);
   align-items: center;
   flex-wrap: wrap;
 }
 
-.restore-success {
-  color: #1f6f43;
-  margin-bottom: 0;
+.restore-file-input {
+  display: none;
 }
 
-.restore-error {
-  color: #b3261e;
-  margin-bottom: 0;
+.selected-file {
+  color: var(--topo-muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 680px) {
+  .actions {
+    justify-content: flex-start;
+  }
+
+  .restore-controls {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }

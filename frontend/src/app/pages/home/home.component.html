@@ -1,12 +1,71 @@
-<section class="page">
-  <header class="page-header">
-    <h1>Welcome Home</h1>
+<section class="page-shell home-page">
+  <header class="page-head">
+    <div>
+      <h1 class="page-title">Plan Better Trips, Faster</h1>
+      <p class="page-subtitle">
+        Keep your destination ideas, budgets, travel companions, and logistics in one place so every trip moves from
+        wishlist to booked with less friction.
+      </p>
+    </div>
+    <a mat-flat-button color="primary" routerLink="/trips">
+      <mat-icon>travel_explore</mat-icon>
+      Open Trips
+    </a>
   </header>
 
-  <mat-card>
-    <h2>Adventure planning starts here.</h2>
-    <p>
-      This is your placeholder homepage. We can add dashboards, highlights, and quick actions in the next iteration.
-    </p>
+  <mat-card class="surface-card hero-card">
+    <div class="hero-grid">
+      <div class="hero-main">
+        <h2 class="section-title">Your Planning Command Center</h2>
+        <p>
+          Build your shortlist, compare priorities, and keep notes tied to each destination without juggling scattered
+          documents.
+        </p>
+        <div class="hero-actions">
+          <a mat-flat-button color="primary" routerLink="/trips/new">
+            <mat-icon>add_circle</mat-icon>
+            Create Trip
+          </a>
+          <a mat-button routerLink="/settings">Configure Home Base</a>
+        </div>
+      </div>
+      <div class="hero-metrics" aria-label="Planning highlights">
+        <div class="metric-tile">
+          <span class="metric-title">Build</span>
+          <span class="metric-copy">Capture destinations, costs, and target dates.</span>
+        </div>
+        <div class="metric-tile">
+          <span class="metric-title">Decide</span>
+          <span class="metric-copy">Rank by priority and effort to spot your best next trip.</span>
+        </div>
+        <div class="metric-tile">
+          <span class="metric-title">Share</span>
+          <span class="metric-copy">Track people and comments to keep everyone aligned.</span>
+        </div>
+      </div>
+    </div>
   </mat-card>
+
+  <div class="quick-links" aria-label="Quick actions">
+    <mat-card class="surface-card quick-card">
+      <mat-icon>group</mat-icon>
+      <h3>Manage People</h3>
+      <p>Keep companion names ready for quick assignment while planning trips.</p>
+      <a mat-button routerLink="/people">Open People</a>
+    </mat-card>
+
+    <mat-card class="surface-card quick-card">
+      <mat-icon>settings</mat-icon>
+      <h3>Tune Settings</h3>
+      <p>Set your home city and API key to get accurate distance and travel context.</p>
+      <a mat-button routerLink="/settings">Open Settings</a>
+    </mat-card>
+
+    <mat-card class="surface-card quick-card">
+      <mat-icon>map</mat-icon>
+      <h3>Review Trips</h3>
+      <p>Browse your list, filter by status, and jump into details for final decisions.</p>
+      <a mat-button routerLink="/trips">Open Trips</a>
+    </mat-card>
+  </div>
 </section>

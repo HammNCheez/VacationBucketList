@@ -33,6 +33,7 @@ export class PeopleComponent implements OnInit {
 
   people: Person[] = [];
   errorMessage = '';
+  successMessage = '';
 
   constructor(
     private readonly peopleService: PeopleService,
@@ -57,9 +58,12 @@ export class PeopleComponent implements OnInit {
     this.peopleService.create({ name }).subscribe({
       next: () => {
         this.form.reset();
+        this.errorMessage = '';
+        this.successMessage = 'Person added.';
         this.loadPeople();
       },
       error: () => {
+        this.successMessage = '';
         this.errorMessage = 'Could not add person.';
       },
     });
@@ -77,8 +81,13 @@ export class PeopleComponent implements OnInit {
         }
 
         this.peopleService.delete(person.id).subscribe({
-          next: () => this.loadPeople(),
+          next: () => {
+            this.errorMessage = '';
+            this.successMessage = 'Person deleted.';
+            this.loadPeople();
+          },
           error: () => {
+            this.successMessage = '';
             this.errorMessage = 'Could not delete person.';
           },
         });
@@ -92,6 +101,7 @@ export class PeopleComponent implements OnInit {
         this.people = people;
       },
       error: () => {
+        this.successMessage = '';
         this.errorMessage = 'Could not load people.';
       },
     });

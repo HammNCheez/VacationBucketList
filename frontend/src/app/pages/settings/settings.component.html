@@ -1,10 +1,15 @@
-<section class="page">
-  <header class="page-header">
-    <h1>Settings</h1>
+<section class="page-shell settings-page">
+  <header class="page-head">
+    <div>
+      <h1 class="page-title">Settings</h1>
+      <p class="page-subtitle">Configure your home base, export backups, and restore your planner data safely.</p>
+    </div>
   </header>
 
-  <mat-card>
-    <form [formGroup]="form" class="grid">
+  <mat-card class="surface-card">
+    <h2 class="section-title">Planner Defaults</h2>
+
+    <form [formGroup]="form" class="grid" (ngSubmit)="save()">
       <mat-form-field appearance="outline">
         <mat-label>Home City</mat-label>
         <input matInput formControlName="home_city" />
@@ -18,38 +23,54 @@
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>OpenRouteService API Key</mat-label>
         <input matInput formControlName="ors_api_key" />
+        <mat-hint>Stored locally and used for distance lookups.</mat-hint>
       </mat-form-field>
+
+      <div class="actions">
+        <button mat-flat-button color="primary" type="submit" [disabled]="saving">
+          {{ saving ? 'Saving...' : 'Save Settings' }}
+        </button>
+        <button mat-button type="button" (click)="exportData()">Export Data</button>
+      </div>
     </form>
 
-    <div class="actions">
-      <button mat-flat-button color="primary" [disabled]="saving" (click)="save()">Save</button>
-      <button mat-button (click)="exportData()">Export Data</button>
-    </div>
-
     @if (message) {
-      <p>{{ message }}</p>
+      <p class="state-message" [class.success]="messageIsSuccess" [class.error]="!messageIsSuccess" aria-live="polite">
+        {{ message }}
+      </p>
     }
   </mat-card>
 
-  <mat-card>
-    <h2>Restore Data</h2>
+  <mat-card class="surface-card restore-card">
+    <h2 class="section-title">Restore Data</h2>
     <p class="restore-help">
       Upload a previously exported JSON file to restore trips, people, and settings.
     </p>
 
-    <div class="restore-controls">
-      <input type="file" accept="application/json,.json" (change)="onRestoreFileSelected($event)" />
-      <button mat-flat-button color="primary" [disabled]="restoring || !selectedRestoreFile" (click)="restoreFromFile()">
+    <form class="restore-controls" (ngSubmit)="restoreFromFile()">
+      <input
+        #restoreFileInput
+        class="restore-file-input"
+        type="file"
+        accept="application/json,.json"
+        (change)="onRestoreFileSelected($event)"
+      />
+      <button mat-stroked-button type="button" (click)="restoreFileInput.click()">
+        <mat-icon>upload_file</mat-icon>
+        Choose File
+      </button>
+      <span class="selected-file">{{ selectedRestoreFile?.name || 'No file selected' }}</span>
+      <button mat-flat-button color="primary" type="submit" [disabled]="restoring || !selectedRestoreFile">
         {{ restoring ? 'Restoring...' : 'Restore from File' }}
       </button>
-    </div>
+    </form>
 
     @if (restoreMessage) {
-      <p class="restore-success">{{ restoreMessage }}</p>
+      <p class="state-message success" aria-live="polite">{{ restoreMessage }}</p>
     }
 
     @if (restoreError) {
-      <p class="restore-error">{{ restoreError }}</p>
+      <p class="state-message error" role="alert" aria-live="assertive">{{ restoreError }}</p>
     }
   </mat-card>
 </section>

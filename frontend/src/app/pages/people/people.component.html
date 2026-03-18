@@ -1,31 +1,47 @@
-<section class="page">
-  <header class="page-header">
-    <h1>People</h1>
+<section class="page-shell people-page">
+  <header class="page-head">
+    <div>
+      <h1 class="page-title">People</h1>
+      <p class="page-subtitle">Manage travel companions once and assign them across trips in seconds.</p>
+    </div>
   </header>
 
   @if (errorMessage) {
-    <p class="error">{{ errorMessage }}</p>
+    <p class="state-message error" role="alert" aria-live="assertive">{{ errorMessage }}</p>
   }
 
-  <mat-card>
-    <form [formGroup]="form" class="row">
-      <mat-form-field appearance="outline" class="grow">
+  @if (successMessage) {
+    <p class="state-message success" aria-live="polite">{{ successMessage }}</p>
+  }
+
+  <mat-card class="surface-card">
+    <h2 class="section-title">Add a Person</h2>
+    <form [formGroup]="form" class="people-form" (ngSubmit)="addPerson()">
+      <mat-form-field appearance="outline" class="name-field">
         <mat-label>Name</mat-label>
-        <input matInput formControlName="name" />
+        <input matInput formControlName="name" autocomplete="off" />
+        @if (form.controls.name.touched && form.controls.name.invalid) {
+          <mat-error>Name is required.</mat-error>
+        }
       </mat-form-field>
-      <button mat-flat-button color="primary" (click)="addPerson()">Add</button>
+      <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">Add Person</button>
     </form>
   </mat-card>
 
-  <mat-card>
+  <mat-card class="surface-card">
+    <div class="list-header">
+      <h2 class="section-title">Saved People</h2>
+      <span class="count-pill">{{ people.length }}</span>
+    </div>
+
     @if (people.length === 0) {
-      <p>No people added yet.</p>
+      <p class="empty-state">No people added yet.</p>
     } @else {
-      <ul>
+      <ul class="people-list">
         @for (person of people; track person.id) {
           <li>
-            <span>{{ person.name }}</span>
-            <button mat-button color="warn" (click)="deletePerson(person)">Delete</button>
+            <span class="person-name">{{ person.name }}</span>
+            <button mat-button color="warn" type="button" (click)="deletePerson(person)">Delete</button>
           </li>
         }
       </ul>
