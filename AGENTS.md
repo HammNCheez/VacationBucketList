@@ -123,7 +123,7 @@ Agent Operational Tips
     - Normalize server-side and ensure distinct sorted results endpoint exists.
 - When modifying data models:
     - Update repositories, Pydantic schemas, frontend models, tests, and export shape.
-    - Add migration note in PLAN.md / AGENTS.md; until Alembic is adopted, create_all() is used.
+    - Create and commit an Alembic revision for schema changes; runtime schema updates are migration-driven (not create_all()).
 
 Common Suggestions
 - Keep PRs small and focused.

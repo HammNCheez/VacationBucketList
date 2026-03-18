@@ -206,7 +206,7 @@ VacationBucketList/
 │   ├── database/
 │   │   ├── __init__.py
 │   │   ├── connection.py          # SQLAlchemy engine + session factory + get_db dependency
-│   │   └── schema.py              # Base.metadata.create_all() on startup
+│   │   └── schema.py              # Database bootstrap via Alembic upgrade head
 │   ├── models/
 │   │   ├── __init__.py
 │   │   ├── db.py                  # SQLAlchemy ORM models
@@ -490,7 +490,7 @@ The following test cases go beyond the basic Verification Steps but cover real f
 ## Open Decisions / Future Work
 
 - **Security boundary (MVP)** — app is local-only. Do not expose backend publicly or over the open internet without adding authentication first.
-- **Alembic migrations** — `create_all()` on startup is sufficient while the schema is in flux; add Alembic when either (a) first non-dev deployment starts, or (b) two consecutive schema changes are needed after sample data exists.
+- **Alembic migrations** — adopted. Schema changes now require committed Alembic revisions; app startup runs migration upgrade to head.
 - **Photo uploads** — Comments currently support a URL to a photo. True file upload can be added as a future enhancement.
 - **Multi-currency totals** — Cost items may carry a currency, but per-person split is only displayed for single-currency trips. Currency conversion can be added later.
 - **Offline / PWA** — Not in scope for the initial build.
