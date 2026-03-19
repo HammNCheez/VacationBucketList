@@ -69,6 +69,7 @@ export class TripDetailComponent implements OnInit {
 
   readonly targetDateRangeControl = new FormControl<string | null>('');
   readonly tripTypeInputControl = new FormControl<string>('', { nonNullable: true });
+  readonly peopleInputControl = new FormControl<string>('', { nonNullable: true });
   readonly dateModeControl = new FormControl<'range' | 'exact'>('range', {
     nonNullable: true,
   });
@@ -140,6 +141,32 @@ export class TripDetailComponent implements OnInit {
     });
   }
 
+  get selectedPersonIds(): number[] {
+    return this.form.get('person_ids')?.value ?? [];
+  }
+
+  get selectedPeople(): Person[] {
+    const selectedIds = new Set(this.selectedPersonIds);
+    return this.availablePeople.filter((person) => selectedIds.has(person.id));
+  }
+
+  get filteredPeopleOptions(): Person[] {
+    const term = this.peopleInputControl.value.trim().toLowerCase();
+    const selectedIds = new Set(this.selectedPersonIds);
+
+    return this.availablePeople.filter((person) => {
+      if (selectedIds.has(person.id)) {
+        return false;
+      }
+
+      if (!term) {
+        return true;
+      }
+
+      return person.name.toLowerCase().includes(term);
+    });
+  }
+
   setActivityLevel(level: number): void {
     this.form.patchValue({ activity_level: level });
   }
@@ -186,6 +213,31 @@ export class TripDetailComponent implements OnInit {
     this.tripTypes = this.tripTypes.filter((tripType) => tripType !== value);
   }
 
+  addPersonById(personId: number | null): void {
+    if (personId == null) {
+      this.peopleInputControl.setValue('');
+      return;
+    }
+
+    if (!this.availablePeople.some((person) => person.id === personId)) {
+      this.peopleInputControl.setValue('');
+      return;
+    }
+
+    const current = this.selectedPersonIds;
+    if (!current.includes(personId)) {
+      this.form.patchValue({ person_ids: [...current, personId] });
+    }
+
+    this.peopleInputControl.setValue('');
+  }
+
+  removePerson(personId: number): void {
+    this.form.patchValue({
+      person_ids: this.selectedPersonIds.filter((id) => id !== personId),
+    });
+  }
+
   handleTripTypeEnter(event: Event): void {
     const keyboardEvent = event as KeyboardEvent;
     keyboardEvent.preventDefault();
@@ -204,6 +256,26 @@ export class TripDetailComponent implements OnInit {
 
   onTripTypeOptionSelected(value: string): void {
     this.tripTypeInputControl.setValue(value);
+  }
+
+  handlePeopleEnter(event: Event, activeSuggestion: number | null): void {
+    const keyboardEvent = event as KeyboardEvent;
+    keyboardEvent.preventDefault();
+    this.addPersonById(activeSuggestion);
+  }
+
+  handlePeopleTab(event: Event, activeSuggestion: number | null): void {
+    if (activeSuggestion == null) {
+      return;
+    }
+
+    const keyboardEvent = event as KeyboardEvent;
+    keyboardEvent.preventDefault();
+    this.addPersonById(activeSuggestion);
+  }
+
+  onPeopleOptionSelected(personId: number): void {
+    this.addPersonById(personId);
   }
 
   get costItemControls(): FormArray<FormGroup> {

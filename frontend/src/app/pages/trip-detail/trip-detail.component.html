@@ -16,90 +16,134 @@
     <form [formGroup]="form" (ngSubmit)="save()">
       <p class="form-help">Fields marked with * are required.</p>
 
-      <div class="form-grid">
-      <mat-form-field appearance="outline">
-        <mat-label>Title *</mat-label>
-        <input matInput formControlName="title" />
-        @if (isControlInvalid('title')) {
-          <mat-error>Title is required.</mat-error>
-        }
-      </mat-form-field>
+      <section class="form-section">
+        <header class="section-header-block">
+          <h2 class="section-headline">Trip Basics</h2>
+          <p class="section-subline">Name it, set destination details, and prioritize it.</p>
+        </header>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Location *</mat-label>
-        <input matInput formControlName="location" />
-        @if (isControlInvalid('location')) {
-          <mat-error>Location is required.</mat-error>
-        }
-      </mat-form-field>
+        <div class="form-grid basics-grid">
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Title</mat-label>
+            <input matInput formControlName="title" placeholder="Summer in Tokyo" />
+            @if (isControlInvalid('title')) {
+              <mat-error>Title is required.</mat-error>
+            }
+          </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Origin</mat-label>
-        <input matInput formControlName="origin" />
-      </mat-form-field>
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Location</mat-label>
+            <input matInput formControlName="location" placeholder="Tokyo, Japan" />
+            @if (isControlInvalid('location')) {
+              <mat-error>Location is required.</mat-error>
+            }
+          </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Status</mat-label>
-        <mat-select formControlName="status">
-          @for (status of statuses; track status) {
-            <mat-option [value]="status">{{ status }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Origin</mat-label>
+            <input matInput formControlName="origin" placeholder="Raleigh, NC" />
+          </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Priority</mat-label>
-        <mat-select formControlName="priority">
-          @for (priority of priorities; track priority) {
-            <mat-option [value]="priority">{{ priority }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select formControlName="status">
+              @for (status of statuses; track status) {
+                <mat-option [value]="status">{{ status }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
 
-      <div class="activity-selector">
-        <span class="activity-label">Activity Level * <strong>{{ activityLevelSummary }}</strong></span>
-        <div class="activity-rating">
-          @for (level of activityLevels; track level) {
-            <button
-              type="button"
-              class="activity-button"
-              [class.selected]="isActivityLevelSelected(level)"
-              [class.dim]="level > (form.get('activity_level')?.value ?? 1)"
-              [attr.aria-label]="'Set activity level to ' + level"
-              [attr.aria-pressed]="level === (form.get('activity_level')?.value ?? 1)"
-              (click)="setActivityLevel(level)"
-            >
-              🔥
-            </button>
-          }
+          <mat-form-field appearance="outline">
+            <mat-label>Priority</mat-label>
+            <mat-select formControlName="priority">
+              @for (priority of priorities; track priority) {
+                <mat-option [value]="priority">{{ priority }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <div class="activity-selector">
+            <span class="activity-label">Activity Level * <strong>{{ activityLevelSummary }}</strong></span>
+            <div class="activity-rating">
+              @for (level of activityLevels; track level) {
+                <button
+                  type="button"
+                  class="activity-button"
+                  [class.selected]="isActivityLevelSelected(level)"
+                  [class.dim]="level > (form.get('activity_level')?.value ?? 1)"
+                  [attr.aria-label]="'Set activity level to ' + level"
+                  [attr.aria-pressed]="level === (form.get('activity_level')?.value ?? 1)"
+                  (click)="setActivityLevel(level)"
+                >
+                  🔥
+                </button>
+              }
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <mat-form-field appearance="outline" class="trip-types-field">
-        <mat-label>Trip Types</mat-label>
-        <mat-chip-grid #tripTypeChipGrid aria-label="Trip type tags">
-          @for (tripType of tripTypes; track tripType) {
-            <mat-chip-row (removed)="removeTripType(tripType)">
-              {{ tripType }}
-              <button matChipRemove type="button" [attr.aria-label]="'Remove ' + tripType">
-                <mat-icon>cancel</mat-icon>
-              </button>
-            </mat-chip-row>
-          }
+      <section class="form-section">
+        <header class="section-header-block">
+          <h2 class="section-headline">Tags and People</h2>
+          <p class="section-subline">Organize this trip with tags and assign existing travelers.</p>
+        </header>
 
-          <input
-            matInput
-            [formControl]="tripTypeInputControl"
-            [matChipInputFor]="tripTypeChipGrid"
-            [matAutocomplete]="tripTypeAutocomplete"
-            (keydown.enter)="handleTripTypeEnter($event)"
-            (keydown.tab)="handleTripTypeTab($event, tripTypeAutocompleteTrigger.activeOption?.value ?? null)"
-            #tripTypeAutocompleteTrigger="matAutocompleteTrigger"
-            placeholder="Type a tag, press Tab to complete, Enter to add"
-          />
-        </mat-chip-grid>
-        <mat-hint>Use Tab to complete a suggestion and Enter to add a tag.</mat-hint>
-      </mat-form-field>
+        <div class="form-grid tags-grid">
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Trip Types</mat-label>
+            <mat-chip-grid #tripTypeChipGrid aria-label="Trip type tags">
+              @for (tripType of tripTypes; track tripType) {
+                <mat-chip-row (removed)="removeTripType(tripType)">
+                  {{ tripType }}
+                  <button matChipRemove type="button" [attr.aria-label]="'Remove ' + tripType">
+                    <mat-icon>cancel</mat-icon>
+                  </button>
+                </mat-chip-row>
+              }
+
+              <input
+                matInput
+                [formControl]="tripTypeInputControl"
+                [matChipInputFor]="tripTypeChipGrid"
+                [matAutocomplete]="tripTypeAutocomplete"
+                (keydown.enter)="handleTripTypeEnter($event)"
+                (keydown.tab)="handleTripTypeTab($event, tripTypeAutocompleteTrigger.activeOption?.value ?? null)"
+                #tripTypeAutocompleteTrigger="matAutocompleteTrigger"
+                placeholder="Type a tag, Tab to complete, Enter to add"
+              />
+            </mat-chip-grid>
+            <mat-hint>Use Tab to complete a suggestion and Enter to add a tag.</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>People</mat-label>
+            <mat-chip-grid #peopleChipGrid aria-label="People on this trip">
+              @for (person of selectedPeople; track person.id) {
+                <mat-chip-row (removed)="removePerson(person.id)">
+                  {{ person.name }}
+                  <button matChipRemove type="button" [attr.aria-label]="'Remove ' + person.name">
+                    <mat-icon>cancel</mat-icon>
+                  </button>
+                </mat-chip-row>
+              }
+
+              <input
+                matInput
+                [formControl]="peopleInputControl"
+                [matChipInputFor]="peopleChipGrid"
+                [matAutocomplete]="peopleAutocomplete"
+                (keydown.enter)="handlePeopleEnter($event, peopleAutocompleteTrigger.activeOption?.value ?? null)"
+                (keydown.tab)="handlePeopleTab($event, peopleAutocompleteTrigger.activeOption?.value ?? null)"
+                #peopleAutocompleteTrigger="matAutocompleteTrigger"
+                placeholder="Select existing people only"
+              />
+            </mat-chip-grid>
+            <mat-hint>Only existing people can be added here.</mat-hint>
+          </mat-form-field>
+        </div>
+      </section>
+
       <mat-autocomplete
         #tripTypeAutocomplete="matAutocomplete"
         (optionSelected)="onTripTypeOptionSelected($event.option.value)"
@@ -109,71 +153,81 @@
         }
       </mat-autocomplete>
 
-      <div class="date-mode-field">
-        <p class="date-mode-label">Target Date Input</p>
-        <p class="date-mode-hint">Choose one: date range or exact start/end dates.</p>
-        <mat-radio-group [formControl]="dateModeControl" class="date-mode-group">
-          <mat-radio-button value="range" (change)="setDateMode('range')">Date Range</mat-radio-button>
-          <mat-radio-button value="exact" (change)="setDateMode('exact')"
-            >Start / End Dates</mat-radio-button
-          >
-        </mat-radio-group>
-        @if (dateModeErrorMessage) {
-          <p class="state-message error" role="alert" aria-live="assertive">{{ dateModeErrorMessage }}</p>
+      <mat-autocomplete
+        #peopleAutocomplete="matAutocomplete"
+        (optionSelected)="onPeopleOptionSelected($event.option.value)"
+      >
+        @for (person of filteredPeopleOptions; track person.id) {
+          <mat-option [value]="person.id">{{ person.name }}</mat-option>
         }
-      </div>
+      </mat-autocomplete>
 
-      @if (dateModeControl.value === 'range') {
-        <app-autocomplete-input
-          [label]="'Target Date Range'"
-          [options]="targetDateRangeOptions"
-          [control]="targetDateRangeControl"
-        />
-      }
+      <section class="form-section">
+        <header class="section-header-block">
+          <h2 class="section-headline">Timing and Logistics</h2>
+          <p class="section-subline">Define dates and travel effort with compact planning controls.</p>
+        </header>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Travel Time (hours)</mat-label>
-        <input matInput type="number" formControlName="travel_time_hours" />
-        <mat-hint>If left blank, this is automatically calculated from origin and location on save.</mat-hint>
-        @if (isControlInvalid('travel_time_hours')) {
-          <mat-error>Travel time must be zero or greater.</mat-error>
-        }
-      </mat-form-field>
+        <div class="form-grid timing-grid">
+          <div class="date-mode-field span-2">
+            <p class="date-mode-label">Target Date Input</p>
+            <p class="date-mode-hint">Choose one: date range or exact start/end dates.</p>
+            <mat-radio-group [formControl]="dateModeControl" class="date-mode-group">
+              <mat-radio-button value="range" (change)="setDateMode('range')">Date Range</mat-radio-button>
+              <mat-radio-button value="exact" (change)="setDateMode('exact')"
+                >Start / End Dates</mat-radio-button
+              >
+            </mat-radio-group>
+            @if (dateModeErrorMessage) {
+              <p class="state-message error" role="alert" aria-live="assertive">{{ dateModeErrorMessage }}</p>
+            }
+          </div>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Duration (days)</mat-label>
-        <input matInput type="number" formControlName="duration_days" />
-        @if (isControlInvalid('duration_days')) {
-          <mat-error>Duration must be zero or greater.</mat-error>
-        }
-      </mat-form-field>
-
-      @if (dateModeControl.value === 'exact') {
-        <mat-form-field appearance="outline">
-          <mat-label>Target Start Date</mat-label>
-          <input matInput type="date" formControlName="target_date_start" />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Target End Date</mat-label>
-          <input matInput type="date" formControlName="target_date_end" />
-        </mat-form-field>
-      }
-
-      <mat-form-field appearance="outline" class="notes-field">
-        <mat-label>Notes</mat-label>
-        <textarea matInput rows="4" formControlName="notes"></textarea>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>People</mat-label>
-        <mat-select formControlName="person_ids" multiple>
-          @for (person of availablePeople; track person.id) {
-            <mat-option [value]="person.id">{{ person.name }}</mat-option>
+          @if (dateModeControl.value === 'range') {
+            <div class="span-2">
+              <app-autocomplete-input
+                [label]="'Target Date Range'"
+                [options]="targetDateRangeOptions"
+                [control]="targetDateRangeControl"
+              />
+            </div>
           }
-        </mat-select>
-      </mat-form-field>
-    </div>
+
+          @if (dateModeControl.value === 'exact') {
+            <mat-form-field appearance="outline">
+              <mat-label>Target Start Date</mat-label>
+              <input matInput type="date" formControlName="target_date_start" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Target End Date</mat-label>
+              <input matInput type="date" formControlName="target_date_end" />
+            </mat-form-field>
+          }
+
+          <mat-form-field appearance="outline" class="compact-field">
+            <mat-label>Travel Time (hrs)</mat-label>
+            <input matInput type="number" formControlName="travel_time_hours" />
+            <mat-hint>Blank = auto-calculated on save.</mat-hint>
+            @if (isControlInvalid('travel_time_hours')) {
+              <mat-error>Travel time must be zero or greater.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="compact-field">
+            <mat-label>Duration (days)</mat-label>
+            <input matInput type="number" formControlName="duration_days" />
+            @if (isControlInvalid('duration_days')) {
+              <mat-error>Duration must be zero or greater.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Notes</mat-label>
+            <textarea matInput rows="4" formControlName="notes"></textarea>
+          </mat-form-field>
+        </div>
+      </section>
 
     <section class="nested-section">
       <div class="section-header">

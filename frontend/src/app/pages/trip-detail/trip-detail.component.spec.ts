@@ -205,6 +205,40 @@ describe('TripDetailComponent', () => {
     expect(component.form.get('activity_level')?.value).toBe(4);
   });
 
+  it('adds people from existing options only', async () => {
+    await createComponent();
+
+    peopleService.list.and.returnValue(
+      of([
+        { id: 1, name: 'Sam' },
+        { id: 2, name: 'Jordan' },
+      ] as Person[])
+    );
+    settingsService.getSettings.and.returnValue(of({ home_city: null, home_zip: null, ors_api_key: null }));
+    tripService.getAutocomplete.and.returnValue(of([]));
+
+    fixture.detectChanges();
+
+    component.addPersonById(2);
+
+    expect(component.selectedPersonIds).toEqual([2]);
+    expect(component.selectedPeople.map((person) => person.name)).toEqual(['Jordan']);
+  });
+
+  it('does not add unknown people id from input', async () => {
+    await createComponent();
+
+    peopleService.list.and.returnValue(of([{ id: 1, name: 'Sam' }]));
+    settingsService.getSettings.and.returnValue(of({ home_city: null, home_zip: null, ors_api_key: null }));
+    tripService.getAutocomplete.and.returnValue(of([]));
+
+    fixture.detectChanges();
+
+    component.addPersonById(999);
+
+    expect(component.selectedPersonIds).toEqual([]);
+  });
+
   it('maps date payload based on selected mode', async () => {
     await createComponent();
 
