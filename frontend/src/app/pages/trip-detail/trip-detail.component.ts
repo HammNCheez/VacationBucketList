@@ -251,11 +251,11 @@ export class TripDetailComponent implements OnInit {
     }
 
     keyboardEvent.preventDefault();
-    this.tripTypeInputControl.setValue(activeSuggestion);
+    this.addTripType(activeSuggestion);
   }
 
   onTripTypeOptionSelected(value: string): void {
-    this.tripTypeInputControl.setValue(value);
+    this.addTripType(value);
   }
 
   handlePeopleEnter(event: Event, activeSuggestion: number | null): void {

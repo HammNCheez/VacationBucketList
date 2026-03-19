@@ -110,10 +110,10 @@
                 (keydown.enter)="handleTripTypeEnter($event)"
                 (keydown.tab)="handleTripTypeTab($event, tripTypeAutocompleteTrigger.activeOption?.value ?? null)"
                 #tripTypeAutocompleteTrigger="matAutocompleteTrigger"
-                placeholder="Type a tag, Tab to complete, Enter to add"
+                placeholder="Type a tag and press Enter"
               />
             </mat-chip-grid>
-            <mat-hint>Use Tab to complete a suggestion and Enter to add a tag.</mat-hint>
+            <mat-hint>Select a suggestion or type a new tag and press Enter.</mat-hint>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="span-2">
