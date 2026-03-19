@@ -12,6 +12,7 @@ class DistanceUnavailableError(Exception):
 @dataclass
 class DistanceResult:
     distance_miles: float
+    travel_time_hours: float
     origin_lat: float
     origin_lng: float
     location_lat: float
@@ -48,9 +49,14 @@ class DistanceService:
             lng, lat = features[0]["geometry"]["coordinates"]
             return float(lat), float(lng)
 
-    def _driving_distance_miles(
+    def _round_travel_time_hours(self, hours: float) -> float:
+        increment = 0.25 if hours < 3 else 0.5
+        rounded = round(hours / increment) * increment
+        return round(rounded, 2)
+
+    def _driving_metrics(
         self, origin: tuple[float, float], destination: tuple[float, float]
-    ) -> float:
+    ) -> tuple[float, float]:
         self._require_key()
         with httpx.Client(timeout=10.0) as client:
             response = client.post(
@@ -65,16 +71,19 @@ class DistanceService:
             )
             response.raise_for_status()
             data = response.json()
-            meters = data["routes"][0]["summary"]["distance"]
-            return float(meters) * 0.000621371
+            summary = data["routes"][0]["summary"]
+            distance_miles = float(summary["distance"]) * 0.000621371
+            travel_time_hours = self._round_travel_time_hours(float(summary["duration"]) / 3600)
+            return distance_miles, travel_time_hours
 
     def calculate(self, origin_text: str, destination_text: str) -> DistanceResult:
         try:
             origin = self._geocode(origin_text)
             destination = self._geocode(destination_text)
-            distance_miles = self._driving_distance_miles(origin, destination)
+            distance_miles, travel_time_hours = self._driving_metrics(origin, destination)
             return DistanceResult(
                 distance_miles=distance_miles,
+                travel_time_hours=travel_time_hours,
                 origin_lat=origin[0],
                 origin_lng=origin[1],
                 location_lat=destination[0],

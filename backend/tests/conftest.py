@@ -25,6 +25,7 @@ class FakeDistanceService:
 
         class Result:
             distance_miles = 100.0
+            travel_time_hours = 1.75
             origin_lat = 40.0
             origin_lng = -74.0
             location_lat = 35.0

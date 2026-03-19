@@ -6,7 +6,8 @@ import { of } from 'rxjs';
 import { TripDetailComponent } from './trip-detail.component';
 import { TripService } from '../../core/services/trip.service';
 import { PeopleService } from '../../core/services/people.service';
-import { Trip } from '../../core/models/trip.model';
+import { SettingsService } from '../../core/services/settings.service';
+import { Trip, TripCreate } from '../../core/models/trip.model';
 import { Person } from '../../core/models/person.model';
 
 describe('TripDetailComponent', () => {
@@ -14,6 +15,7 @@ describe('TripDetailComponent', () => {
   let component: TripDetailComponent;
   let tripService: jasmine.SpyObj<TripService>;
   let peopleService: jasmine.SpyObj<PeopleService>;
+  let settingsService: jasmine.SpyObj<SettingsService>;
   let router: jasmine.SpyObj<Router>;
 
   const createComponent = async (tripId?: number) => {
@@ -24,6 +26,7 @@ describe('TripDetailComponent', () => {
       'getAutocomplete',
     ]);
     peopleService = jasmine.createSpyObj('PeopleService', ['list']);
+    settingsService = jasmine.createSpyObj('SettingsService', ['getSettings']);
     router = jasmine.createSpyObj('Router', ['navigate']);
 
     const route = {
@@ -37,6 +40,7 @@ describe('TripDetailComponent', () => {
       providers: [
         { provide: TripService, useValue: tripService },
         { provide: PeopleService, useValue: peopleService },
+        { provide: SettingsService, useValue: settingsService },
         { provide: Router, useValue: router },
         { provide: ActivatedRoute, useValue: route },
       ],
@@ -55,14 +59,34 @@ describe('TripDetailComponent', () => {
     await createComponent();
 
     peopleService.list.and.returnValue(of([{ id: 1, name: 'Sam' } as Person]));
-    tripService.getAutocomplete.and.returnValue(of(['Late Summer']));
+    settingsService.getSettings.and.returnValue(of({ home_city: null, home_zip: null, ors_api_key: null }));
+    tripService.getAutocomplete.and.callFake((field) =>
+      field === 'target_date_range' ? of(['Late Summer']) : of(['Beach'])
+    );
 
     fixture.detectChanges();
 
     expect(peopleService.list).toHaveBeenCalled();
     expect(tripService.getAutocomplete).toHaveBeenCalledWith('target_date_range');
+    expect(tripService.getAutocomplete).toHaveBeenCalledWith('trip_type');
+    expect(settingsService.getSettings).toHaveBeenCalled();
     expect(component.availablePeople.length).toBe(1);
     expect(component.targetDateRangeOptions).toEqual(['Late Summer']);
+    expect(component.tripTypeOptions).toEqual(['Beach']);
+  });
+
+  it('prefills origin from settings on new trip', async () => {
+    await createComponent();
+
+    peopleService.list.and.returnValue(of([]));
+    tripService.getAutocomplete.and.returnValue(of([]));
+    settingsService.getSettings.and.returnValue(
+      of({ home_city: 'Seattle', home_zip: '98101', ors_api_key: null })
+    );
+
+    fixture.detectChanges();
+
+    expect(component.form.get('origin')?.value).toBe('Seattle');
   });
 
   it('loads trip data when editing', async () => {
@@ -92,7 +116,10 @@ describe('TripDetailComponent', () => {
     };
 
     peopleService.list.and.returnValue(of([{ id: 5, name: 'Jordan' }]));
-    tripService.getAutocomplete.and.returnValue(of(['Early Summer']));
+    settingsService.getSettings.and.returnValue(of({ home_city: 'Seattle', home_zip: null, ors_api_key: null }));
+    tripService.getAutocomplete.and.callFake((field) =>
+      field === 'target_date_range' ? of(['Early Summer']) : of(['Food'])
+    );
     tripService.getTrip.and.returnValue(of(trip));
 
     fixture.detectChanges();
@@ -103,12 +130,16 @@ describe('TripDetailComponent', () => {
     expect(component.costItemControls.length).toBe(1);
     expect(component.commentControls.length).toBe(1);
     expect(component.targetDateRangeControl.value).toBe('Early Summer');
+    expect(component.tripTypes).toEqual(['Food']);
+    expect(component.dateModeControl.value).toBe('exact');
+    expect(settingsService.getSettings).not.toHaveBeenCalled();
   });
 
   it('creates a trip on save when new', async () => {
     await createComponent();
 
     peopleService.list.and.returnValue(of([]));
+    settingsService.getSettings.and.returnValue(of({ home_city: null, home_zip: null, ors_api_key: null }));
     tripService.getAutocomplete.and.returnValue(of([]));
     tripService.createTrip.and.returnValue(of({} as Trip));
 
@@ -117,8 +148,8 @@ describe('TripDetailComponent', () => {
     component.form.patchValue({
       title: 'Kyoto',
       location: 'Japan',
-      trip_types_text: 'Cultural',
     });
+    component.tripTypes = ['Cultural'];
     component.targetDateRangeControl.setValue('Spring');
 
     component.save();
@@ -127,7 +158,7 @@ describe('TripDetailComponent', () => {
       jasmine.objectContaining({
         title: 'Kyoto',
         location: 'Japan',
-        activity_level: 3,
+        activity_level: 1,
         trip_types: ['Cultural'],
         target_date_range: 'Spring',
       })
@@ -135,10 +166,85 @@ describe('TripDetailComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/trips']);
   });
 
+  it('omits travel_time_hours when left blank on save', async () => {
+    await createComponent();
+
+    peopleService.list.and.returnValue(of([]));
+    settingsService.getSettings.and.returnValue(of({ home_city: null, home_zip: null, ors_api_key: null }));
+    tripService.getAutocomplete.and.returnValue(of([]));
+    tripService.createTrip.and.returnValue(of({} as Trip));
+
+    fixture.detectChanges();
+
+    component.form.patchValue({
+      title: 'Kyoto',
+      location: 'Japan',
+      travel_time_hours: null,
+    });
+    component.tripTypes = ['Culture'];
+    component.save();
+
+    const payload = tripService.createTrip.calls.mostRecent().args[0] as TripCreate;
+    expect(payload.travel_time_hours).toBeUndefined();
+  });
+
+  it('supports case-insensitive trip type dedupe and activity selection', async () => {
+    await createComponent();
+
+    peopleService.list.and.returnValue(of([]));
+    settingsService.getSettings.and.returnValue(of({ home_city: null, home_zip: null, ors_api_key: null }));
+    tripService.getAutocomplete.and.returnValue(of(['Beach']));
+
+    fixture.detectChanges();
+
+    component.addTripType('Beach');
+    component.addTripType('beach');
+    component.setActivityLevel(4);
+
+    expect(component.tripTypes).toEqual(['Beach']);
+    expect(component.form.get('activity_level')?.value).toBe(4);
+  });
+
+  it('maps date payload based on selected mode', async () => {
+    await createComponent();
+
+    peopleService.list.and.returnValue(of([]));
+    settingsService.getSettings.and.returnValue(of({ home_city: null, home_zip: null, ors_api_key: null }));
+    tripService.getAutocomplete.and.returnValue(of([]));
+    tripService.createTrip.and.returnValue(of({} as Trip));
+
+    fixture.detectChanges();
+
+    component.form.patchValue({
+      title: 'Lisbon',
+      location: 'Portugal',
+      target_date_start: '2026-06-01',
+      target_date_end: '2026-06-12',
+    });
+    component.targetDateRangeControl.setValue('Summer 2026');
+
+    component.setDateMode('exact');
+    component.save();
+
+    const exactPayload = tripService.createTrip.calls.mostRecent().args[0] as TripCreate;
+    expect(exactPayload.target_date_start).toBe('2026-06-01');
+    expect(exactPayload.target_date_end).toBe('2026-06-12');
+    expect(exactPayload.target_date_range).toBeNull();
+
+    component.setDateMode('range');
+    component.save();
+
+    const rangePayload = tripService.createTrip.calls.mostRecent().args[0] as TripCreate;
+    expect(rangePayload.target_date_start).toBeNull();
+    expect(rangePayload.target_date_end).toBeNull();
+    expect(rangePayload.target_date_range).toBe('Summer 2026');
+  });
+
   it('updates a trip on save when editing', async () => {
     await createComponent(3);
 
     peopleService.list.and.returnValue(of([]));
+    settingsService.getSettings.and.returnValue(of({ home_city: 'Ignored', home_zip: null, ors_api_key: null }));
     tripService.getAutocomplete.and.returnValue(of([]));
     tripService.getTrip.and.returnValue(
       of({

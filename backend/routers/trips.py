@@ -122,6 +122,8 @@ def _distance_warning() -> WarningMessage:
 
 def _apply_distance_result(values: dict, distance: DistanceResult) -> None:
     values["distance_miles"] = distance.distance_miles
+    if "travel_time_hours" not in values or values["travel_time_hours"] is None:
+        values["travel_time_hours"] = distance.travel_time_hours
     values["origin_lat"] = distance.origin_lat
     values["origin_lng"] = distance.origin_lng
     values["location_lat"] = distance.location_lat

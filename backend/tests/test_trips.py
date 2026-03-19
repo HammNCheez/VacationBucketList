@@ -80,6 +80,55 @@ def test_trip_soft_fail_distance(client: TestClient, fake_distance_service) -> N
     assert body["warnings"][0]["code"] == "DISTANCE_UNAVAILABLE"
 
 
+def test_trip_autofills_travel_time_when_omitted(client: TestClient) -> None:
+    payload = _create_trip_payload()
+    del payload["travel_time_hours"]
+
+    response = client.post("/trips", json=payload)
+
+    assert response.status_code == 201
+    assert response.json()["travel_time_hours"] == pytest.approx(1.75)
+
+
+def test_trip_preserves_manual_travel_time_override(client: TestClient) -> None:
+    create_payload = _create_trip_payload()
+    create_payload["travel_time_hours"] = 2.25
+
+    create_response = client.post("/trips", json=create_payload)
+    assert create_response.status_code == 201
+    created = create_response.json()
+    trip_id = created["id"]
+    assert created["travel_time_hours"] == pytest.approx(2.25)
+
+    update_response = client.put(
+        f"/trips/{trip_id}",
+        json={
+            "origin": "Charlotte",
+            "location": "Kyoto",
+            "travel_time_hours": 4.5,
+        },
+    )
+
+    assert update_response.status_code == 200
+    assert update_response.json()["travel_time_hours"] == pytest.approx(4.5)
+
+
+def test_trip_soft_fail_distance_does_not_override_manual_travel_time(
+    client: TestClient, fake_distance_service
+) -> None:
+    fake_distance_service.should_fail = True
+    payload = _create_trip_payload()
+    payload["travel_time_hours"] = 6.0
+
+    response = client.post("/trips", json=payload)
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["distance_miles"] is None
+    assert body["travel_time_hours"] == pytest.approx(6.0)
+    assert body["warnings"][0]["code"] == "DISTANCE_UNAVAILABLE"
+
+
 def test_trip_filters_and_sort(client: TestClient) -> None:
     payload_one = _create_trip_payload()
     payload_one["title"] = "A"

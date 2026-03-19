@@ -9,11 +9,14 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 
 import { Person } from '../../core/models/person.model';
@@ -26,6 +29,7 @@ import {
   TripUpdate,
 } from '../../core/models/trip.model';
 import { PeopleService } from '../../core/services/people.service';
+import { SettingsService } from '../../core/services/settings.service';
 import { TripService } from '../../core/services/trip.service';
 import { AutocompleteInputComponent } from '../../shared/autocomplete-input/autocomplete-input.component';
 import { ConfirmDialogService } from '../../shared/confirm-dialog/confirm-dialog.service';
@@ -38,9 +42,12 @@ import { ConfirmDialogService } from '../../shared/confirm-dialog/confirm-dialog
     ReactiveFormsModule,
     MatButtonModule,
     MatCardModule,
+    MatChipsModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
+    MatAutocompleteModule,
+    MatRadioModule,
     MatSelectModule,
     AutocompleteInputComponent,
   ],
@@ -61,7 +68,13 @@ export class TripDetailComponent implements OnInit {
   readonly activityLevels = [1, 2, 3, 4, 5];
 
   readonly targetDateRangeControl = new FormControl<string | null>('');
+  readonly tripTypeInputControl = new FormControl<string>('', { nonNullable: true });
+  readonly dateModeControl = new FormControl<'range' | 'exact'>('range', {
+    nonNullable: true,
+  });
   targetDateRangeOptions: string[] = [];
+  tripTypeOptions: string[] = [];
+  tripTypes: string[] = [];
   availablePeople: Person[] = [];
 
   readonly form = this.fb.group({
@@ -70,14 +83,13 @@ export class TripDetailComponent implements OnInit {
     origin: [''],
     status: ['Wishlist' as TripStatus, [Validators.required]],
     priority: ['Want-to' as TripPriority, [Validators.required]],
-    activity_level: [3, [Validators.required, Validators.min(1), Validators.max(5)]],
-    travel_time_hours: [0],
+    activity_level: [1, [Validators.required, Validators.min(1), Validators.max(5)]],
+    travel_time_hours: [null as number | null, [Validators.min(0)]],
     duration_days: [0],
     target_date_start: [''],
     target_date_end: [''],
     notes: [''],
     person_ids: [[] as number[]],
-    trip_types_text: [''],
   });
 
   readonly costItems = new FormArray<FormGroup>([]);
@@ -86,12 +98,14 @@ export class TripDetailComponent implements OnInit {
   tripId: number | null = null;
   saving = false;
   errorMessage = '';
+  dateModeErrorMessage = '';
 
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly tripService: TripService,
     private readonly peopleService: PeopleService,
+    private readonly settingsService: SettingsService,
     private readonly confirmDialog: ConfirmDialogService
   ) {}
 
@@ -101,10 +115,95 @@ export class TripDetailComponent implements OnInit {
 
     this.loadPeople();
     this.loadTargetDateRangeOptions();
+    this.loadTripTypeOptions();
 
     if (this.tripId) {
       this.loadTrip(this.tripId);
+    } else {
+      this.prefillOriginFromSettings();
     }
+  }
+
+  get filteredTripTypeOptions(): string[] {
+    const term = this.tripTypeInputControl.value.trim().toLowerCase();
+    const selected = new Set(this.tripTypes.map((tag) => tag.toLowerCase()));
+
+    return this.tripTypeOptions.filter((option) => {
+      const normalizedOption = option.toLowerCase();
+      if (selected.has(normalizedOption)) {
+        return false;
+      }
+      if (!term) {
+        return true;
+      }
+      return normalizedOption.includes(term);
+    });
+  }
+
+  setActivityLevel(level: number): void {
+    this.form.patchValue({ activity_level: level });
+  }
+
+  isActivityLevelSelected(level: number): boolean {
+    return (this.form.get('activity_level')?.value ?? 1) === level;
+  }
+
+  get activityLevelSummary(): string {
+    return `${this.form.get('activity_level')?.value ?? 1}/5`;
+  }
+
+  setDateMode(mode: 'range' | 'exact'): void {
+    this.dateModeControl.setValue(mode);
+    this.dateModeErrorMessage = '';
+  }
+
+  isControlInvalid(controlName: keyof typeof this.form.controls): boolean {
+    const control = this.form.get(controlName);
+    if (!control) {
+      return false;
+    }
+    return control.invalid && (control.touched || control.dirty);
+  }
+
+  addTripType(value: string): void {
+    const normalized = value.trim();
+    if (!normalized) {
+      this.tripTypeInputControl.setValue('');
+      return;
+    }
+
+    const exists = this.tripTypes.some(
+      (existingType) => existingType.toLowerCase() === normalized.toLowerCase()
+    );
+    if (!exists) {
+      this.tripTypes = [...this.tripTypes, normalized];
+    }
+
+    this.tripTypeInputControl.setValue('');
+  }
+
+  removeTripType(value: string): void {
+    this.tripTypes = this.tripTypes.filter((tripType) => tripType !== value);
+  }
+
+  handleTripTypeEnter(event: Event): void {
+    const keyboardEvent = event as KeyboardEvent;
+    keyboardEvent.preventDefault();
+    this.addTripType(this.tripTypeInputControl.value);
+  }
+
+  handleTripTypeTab(event: Event, activeSuggestion: string | null): void {
+    const keyboardEvent = event as KeyboardEvent;
+    if (!activeSuggestion) {
+      return;
+    }
+
+    keyboardEvent.preventDefault();
+    this.tripTypeInputControl.setValue(activeSuggestion);
+  }
+
+  onTripTypeOptionSelected(value: string): void {
+    this.tripTypeInputControl.setValue(value);
   }
 
   get costItemControls(): FormArray<FormGroup> {
@@ -153,7 +252,7 @@ export class TripDetailComponent implements OnInit {
 
   removeComment(index: number): void {
     const body = this.comments.at(index).get('body')?.value as string | null;
-    const label = body?.trim() ? `comment \"${body.trim()}\"` : 'this comment';
+    const label = body?.trim() ? `comment "${body.trim()}"` : 'this comment';
 
     this.confirmDialog
       .confirm({
@@ -169,6 +268,8 @@ export class TripDetailComponent implements OnInit {
   }
 
   save(): void {
+    this.dateModeErrorMessage = '';
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -178,6 +279,19 @@ export class TripDetailComponent implements OnInit {
     this.errorMessage = '';
 
     const formValue = this.form.getRawValue();
+    const parsedDurationDays = this.parseOptionalNumber(formValue.duration_days) ?? 0;
+    const parsedTravelTime = this.parseOptionalNumber(formValue.travel_time_hours);
+    const isRangeMode = this.dateModeControl.value === 'range';
+
+    if (!isRangeMode) {
+      const startDate = formValue.target_date_start || null;
+      const endDate = formValue.target_date_end || null;
+      if (startDate && endDate && startDate > endDate) {
+        this.dateModeErrorMessage = 'Target start date must be before or equal to target end date.';
+        return;
+      }
+    }
+
     const payload = {
       title: formValue.title ?? '',
       location: formValue.location ?? '',
@@ -185,24 +299,24 @@ export class TripDetailComponent implements OnInit {
       status: formValue.status ?? 'Wishlist',
       priority: formValue.priority ?? 'Want-to',
       activity_level: Number(formValue.activity_level),
-      travel_time_hours: Number(formValue.travel_time_hours ?? 0),
-      duration_days: Number(formValue.duration_days ?? 0),
-      target_date_start: formValue.target_date_start || null,
-      target_date_end: formValue.target_date_end || null,
-      target_date_range: this.targetDateRangeControl.value || null,
+      duration_days: parsedDurationDays,
+      target_date_start: isRangeMode ? null : formValue.target_date_start || null,
+      target_date_end: isRangeMode ? null : formValue.target_date_end || null,
+      target_date_range: isRangeMode ? this.targetDateRangeControl.value || null : null,
       notes: formValue.notes || null,
       person_ids: formValue.person_ids ?? [],
-      trip_types: (formValue.trip_types_text ?? '')
-        .split(',')
-        .map((item) => item.trim())
-        .filter((item) => item.length > 0),
+      trip_types: this.tripTypes,
       cost_items: this.costItems.controls.map((control) => control.getRawValue() as CostItem),
       comments: this.comments.controls.map((control) => control.getRawValue() as Comment),
-    };
+    } as TripCreate;
+
+    if (parsedTravelTime != null) {
+      payload.travel_time_hours = parsedTravelTime;
+    }
 
     const request$ = this.tripId
       ? this.tripService.updateTrip(this.tripId, payload as TripUpdate)
-      : this.tripService.createTrip(payload as TripCreate);
+      : this.tripService.createTrip(payload);
 
     request$.subscribe({
       next: (saved) => {
@@ -240,9 +354,40 @@ export class TripDetailComponent implements OnInit {
     });
   }
 
+  private loadTripTypeOptions(): void {
+    this.tripService.getAutocomplete('trip_type').subscribe({
+      next: (options) => (this.tripTypeOptions = options),
+    });
+  }
+
+  private prefillOriginFromSettings(): void {
+    this.settingsService.getSettings().subscribe({
+      next: (settings) => {
+        const existingOrigin = this.form.get('origin')?.value?.trim() ?? '';
+        if (!existingOrigin && settings.home_city) {
+          this.form.patchValue({ origin: settings.home_city });
+        }
+      },
+    });
+  }
+
+  private parseOptionalNumber(value: unknown): number | null {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+
+    const parsed = Number(value);
+    if (Number.isNaN(parsed)) {
+      return null;
+    }
+    return parsed;
+  }
+
   private loadTrip(tripId: number): void {
     this.tripService.getTrip(tripId).subscribe({
       next: (trip) => {
+        const hasExactDates = Boolean(trip.target_date_start || trip.target_date_end);
+
         this.form.patchValue({
           title: trip.title,
           location: trip.location,
@@ -256,10 +401,11 @@ export class TripDetailComponent implements OnInit {
           target_date_end: trip.target_date_end ?? '',
           notes: trip.notes ?? '',
           person_ids: trip.people.map((person) => person.id),
-          trip_types_text: trip.trip_types.join(', '),
         });
 
+        this.tripTypes = [...trip.trip_types];
         this.targetDateRangeControl.setValue(trip.target_date_range ?? '');
+        this.dateModeControl.setValue(hasExactDates ? 'exact' : 'range');
         this.costItems.clear();
         for (const item of trip.cost_items) {
           this.costItems.push(
