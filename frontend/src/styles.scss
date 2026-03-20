@@ -1,0 +1,250 @@
+@use '@angular/material' as mat;
+@import url('https://fonts.googleapis.com/css2?family=Chivo:wght@400;600;700&family=Special+Elite&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
+html {
+	@include mat.theme(
+		(
+			color: mat.$green-palette,
+			typography: 'Chivo',
+			density: 0,
+		)
+	);
+}
+
+:root {
+	--topo-forest: #1f3d2f;
+	--topo-moss: #3c5e45;
+	--topo-sand: #f0dfba;
+	--topo-dusk: #9f6f2c;
+	--topo-paper: #f9f5e8;
+	--topo-ink: #1c2c24;
+	--topo-muted: #5a6b60;
+	--topo-line: rgb(31 61 47 / 16%);
+	--topo-success: #1f6f43;
+	--topo-danger: #b3261e;
+	--space-1: 0.5rem;
+	--space-2: 0.75rem;
+	--space-3: 1rem;
+	--space-4: 1.5rem;
+	--space-5: 2rem;
+	--radius-card: 14px;
+}
+
+body {
+	margin: 0;
+	font-family: 'Chivo', 'Segoe UI', sans-serif;
+	color: var(--topo-ink);
+	background-color: var(--topo-paper);
+	background-image:
+		linear-gradient(135deg, rgb(249 245 232 / 85%), rgb(240 223 186 / 72%)),
+		url('/map-bg.svg');
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
+	min-height: 100vh;
+}
+
+h1,
+h2,
+h3 {
+	font-family: 'Special Elite', 'Georgia', serif;
+	letter-spacing: 0.04em;
+}
+
+mat-card {
+	background: rgb(249 245 232 / 92%) !important;
+	backdrop-filter: blur(2px);
+	border-radius: var(--radius-card) !important;
+	border: 1px solid var(--topo-line);
+}
+
+.page-shell {
+	display: grid;
+	gap: var(--space-4);
+	animation: page-reveal 360ms ease-out both;
+}
+
+.page-head {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: var(--space-3);
+	flex-wrap: wrap;
+}
+
+.page-title {
+	margin: 0;
+	line-height: 1.1;
+	font-size: clamp(1.8rem, 1.4rem + 1.3vw, 2.5rem);
+}
+
+.page-subtitle {
+	margin: 0.4rem 0 0;
+	color: var(--topo-muted);
+	max-width: 70ch;
+	line-height: 1.5;
+}
+
+.surface-card {
+	padding: clamp(1rem, 0.75rem + 0.8vw, 1.5rem);
+	overflow: hidden;
+}
+
+.section-title {
+	margin: 0 0 var(--space-2);
+	font-size: 1.2rem;
+	letter-spacing: 0.03em;
+}
+
+.state-message {
+	margin: 0;
+	padding: 0.65rem 0.9rem;
+	border-radius: 10px;
+	font-weight: 600;
+	font-size: 0.92rem;
+	width: fit-content;
+	max-width: 100%;
+}
+
+.state-message.success {
+	background: rgb(31 111 67 / 12%);
+	color: var(--topo-success);
+}
+
+.state-message.error {
+	background: rgb(179 38 30 / 10%);
+	color: var(--topo-danger);
+}
+
+@keyframes page-reveal {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* ─── Shared navigation ─────────────────────────────────── */
+
+.back-btn {
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+}
+
+/* Pushes siblings apart in a flex row header */
+.spacer,
+.header-spacer {
+	flex: 1;
+}
+
+/* ─── Loading state ─────────────────────────────────────── */
+
+.loading {
+	display: flex;
+	justify-content: center;
+	padding: var(--space-5);
+}
+
+/* ─── Activity rating ───────────────────────────────────── */
+
+.activity-rating {
+	display: inline-flex;
+	gap: 1px;
+}
+
+.activity-rating .dim {
+	filter: grayscale(1);
+	opacity: 0.25;
+}
+
+/* ─── Section header row (title + toggle/action button) ─── */
+
+.section-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 0.75rem;
+}
+
+.section-header h2 {
+	margin: 0;
+}
+
+/* Inline no-content hint inside section cards */
+.empty-hint {
+	color: var(--topo-muted);
+	font-style: italic;
+	margin: 0;
+}
+
+/* ─── Status chips ──────────────────────────────────────── */
+
+.status-chip {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.25rem 0.75rem;
+	border-radius: 12px;
+	font-size: 0.82rem;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	white-space: nowrap;
+}
+
+.status-wishlist {
+	background: #7b5621;
+	color: var(--topo-paper);
+}
+
+.status-actively-planning {
+	background: rgb(60 94 69 / 18%);
+	color: var(--topo-moss);
+}
+
+.status-booked {
+	background: var(--topo-forest);
+	color: var(--topo-paper);
+}
+
+.status-completed {
+	background: #5b5b5b;
+	color: var(--topo-paper);
+}
+
+.status-cancelled {
+	background: #8a1f1a;
+	color: var(--topo-paper);
+}
+
+/* ─── Priority badges ───────────────────────────────────── */
+
+.priority-badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.2rem 0.65rem;
+	border-radius: 12px;
+	font-size: 0.82rem;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.priority-must-do {
+	background: var(--topo-ink);
+	color: var(--topo-paper);
+}
+
+.priority-want-to {
+	background: rgb(159 111 44 / 22%);
+	color: var(--topo-dusk);
+}
+
+.priority-nice-to-have {
+	background: #6a6a6a;
+	color: var(--topo-paper);
+}
+/* You can add global styles to this file, and also import other style files */

@@ -1,0 +1,235 @@
+<section class="page-shell trip-view-page">
+  <!-- Page header with back button, title, and edit button -->
+  <header class="page-header">
+    <button mat-button (click)="goBack()" class="back-btn">
+      <mat-icon>arrow_back</mat-icon>
+      Back to Trips
+    </button>
+    <span class="spacer"></span>
+    <button mat-flat-button color="primary" (click)="goEdit()">
+      <mat-icon>edit</mat-icon>
+      Edit Trip
+    </button>
+  </header>
+
+  @if (loading) {
+    <div class="loading">
+      <mat-spinner diameter="36"></mat-spinner>
+    </div>
+  }
+
+  @if (errorMessage) {
+    <p class="state-message error" role="alert" aria-live="assertive">{{ errorMessage }}</p>
+  }
+
+  @if (trip) {
+    <!-- Hero card -->
+    <mat-card class="hero-card">
+      <h1 class="trip-title">{{ trip.title }}</h1>
+      <div class="hero-meta">
+        <span [class]="statusClass(trip.status)">{{ trip.status }}</span>
+        <span [class]="priorityClass(trip.priority)">{{ trip.priority }}</span>
+        <span class="activity-display" [matTooltip]="'Activity level: ' + trip.activity_level + '/5'">
+          <span class="activity-rating">
+            @for (n of [1,2,3,4,5]; track n) {
+              <span [class.dim]="n > trip.activity_level">🔥</span>
+            }
+          </span>
+        </span>
+      </div>
+      <mat-divider></mat-divider>
+      <div class="hero-details">
+        <div class="detail-item">
+          <mat-icon>location_on</mat-icon>
+          <span>{{ trip.location }}</span>
+        </div>
+        @if (trip.origin) {
+          <div class="detail-item">
+            <mat-icon>home</mat-icon>
+            <span>From: {{ trip.origin }}</span>
+          </div>
+        }
+        <div class="detail-item">
+          <mat-icon>straighten</mat-icon>
+          <span>{{ formatDistance(trip.distance_miles) }}</span>
+        </div>
+      </div>
+    </mat-card>
+
+    <!-- Details card -->
+    <mat-card class="details-card">
+      <h2>Details</h2>
+      <div class="detail-grid">
+        @if (trip.trip_types.length > 0) {
+          <div class="detail-label">Trip Types</div>
+          <div class="detail-value chips-row">
+            @for (type of trip.trip_types; track type) {
+              <span class="chip">{{ type }}</span>
+            }
+          </div>
+        }
+
+        @if (trip.people.length > 0) {
+          <div class="detail-label">People</div>
+          <div class="detail-value chips-row">
+            @for (person of trip.people; track person.id) {
+              <span class="chip person-chip">{{ person.name }}</span>
+            }
+          </div>
+        }
+
+        @if (trip.target_date_range) {
+          <div class="detail-label">Target Date Range</div>
+          <div class="detail-value">{{ trip.target_date_range }}</div>
+        }
+
+        <div class="detail-label">Start Date</div>
+        <div class="detail-value">{{ formatDate(trip.target_date_start) }}</div>
+
+        <div class="detail-label">End Date</div>
+        <div class="detail-value">{{ formatDate(trip.target_date_end) }}</div>
+
+        <div class="detail-label">Duration</div>
+        <div class="detail-value">{{ trip.duration_days ? trip.duration_days + ' days' : '—' }}</div>
+
+        <div class="detail-label">Travel Time</div>
+        <div class="detail-value">{{ formatTravelTime(trip.travel_time_hours) }}</div>
+
+        @if (trip.per_person_cost != null) {
+          <div class="detail-label">Per-Person Cost</div>
+          <div class="detail-value">{{ trip.per_person_cost | currency:(trip.per_person_currency ?? 'USD') }}</div>
+        }
+
+        @if (trip.notes) {
+          <div class="detail-label notes-label">Notes</div>
+          <div class="detail-value notes-value">{{ trip.notes }}</div>
+        }
+      </div>
+    </mat-card>
+
+    <!-- Cost Items card -->
+    <mat-card class="section-card">
+      <div class="section-header">
+        <h2>Cost Items</h2>
+        <button mat-button type="button" (click)="toggleAddCostItem()">
+          <mat-icon>{{ showAddCostItem ? 'close' : 'add' }}</mat-icon>
+          {{ showAddCostItem ? 'Cancel' : 'Add' }}
+        </button>
+      </div>
+
+      @if (showAddCostItem) {
+        <form [formGroup]="costItemForm" class="inline-add-form" (ngSubmit)="saveCostItem()">
+          <mat-form-field appearance="outline">
+            <mat-label>Category</mat-label>
+            <input matInput formControlName="category" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Amount</mat-label>
+            <input matInput type="number" formControlName="amount" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Currency</mat-label>
+            <input matInput formControlName="currency" />
+          </mat-form-field>
+          <button mat-flat-button color="primary" type="submit" [disabled]="saving">
+            {{ saving ? 'Saving...' : 'Save' }}
+          </button>
+        </form>
+      }
+
+      @if (trip.cost_items.length === 0 && !showAddCostItem) {
+        <p class="empty-hint">No cost items yet.</p>
+      }
+
+      @if (trip.cost_items.length > 0) {
+        <div class="cost-list">
+          @for (item of trip.cost_items; track $index) {
+            <div class="cost-row">
+              <span class="cost-category">{{ item.category }}</span>
+              <span class="cost-amount">{{ item.amount | currency:(item.currency ?? 'USD') }}</span>
+              <button mat-icon-button color="warn" type="button" (click)="removeCostItem($index)" matTooltip="Remove" aria-label="Remove cost item">
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            </div>
+          }
+          <mat-divider></mat-divider>
+          <div class="cost-row total-row">
+            <span class="cost-category"><strong>Total</strong></span>
+            <span class="cost-amount"><strong>{{ totalCost() | currency:'USD' }}</strong></span>
+            <span class="icon-placeholder"></span>
+          </div>
+        </div>
+      }
+    </mat-card>
+
+    <!-- Comments card -->
+    <mat-card class="section-card">
+      <div class="section-header">
+        <h2>Comments</h2>
+        <button mat-button type="button" (click)="toggleAddComment()">
+          <mat-icon>{{ showAddComment ? 'close' : 'add' }}</mat-icon>
+          {{ showAddComment ? 'Cancel' : 'Add' }}
+        </button>
+      </div>
+
+      @if (showAddComment) {
+        <form [formGroup]="commentForm" class="inline-add-form" (ngSubmit)="saveComment()">
+          <mat-form-field appearance="outline" class="comment-body-field">
+            <mat-label>Comment</mat-label>
+            <textarea matInput formControlName="body" rows="3"></textarea>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>URL (optional)</mat-label>
+            <input matInput formControlName="url" />
+          </mat-form-field>
+          <button mat-flat-button color="primary" type="submit" [disabled]="saving">
+            {{ saving ? 'Saving...' : 'Save' }}
+          </button>
+        </form>
+      }
+
+      @if (trip.comments.length === 0 && !showAddComment) {
+        <p class="empty-hint">No comments yet.</p>
+      }
+
+      @if (trip.comments.length > 0) {
+        <div class="comments-list">
+          @for (comment of trip.comments; track $index) {
+            <div class="comment-item">
+              <div class="comment-body">
+                <span>{{ comment.body }}</span>
+                @if (comment.url) {
+                  <a
+                    [href]="comment.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    matTooltip="Open link"
+                    class="comment-link"
+                    aria-label="Open comment link in a new tab"
+                  >
+                    <mat-icon>open_in_new</mat-icon>
+                  </a>
+                }
+              </div>
+              @if (comment.created_at) {
+                <span class="comment-date">{{ formatDate(comment.created_at) }}</span>
+              }
+              <button mat-icon-button color="warn" type="button" (click)="removeComment($index)" matTooltip="Remove" aria-label="Remove comment">
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            </div>
+            @if (!$last) {
+              <mat-divider></mat-divider>
+            }
+          }
+        </div>
+      }
+    </mat-card>
+
+    <!-- Timestamps -->
+    <div class="timestamps">
+      <span>Created {{ formatDate(trip.created_at) }}</span>
+      <span>Updated {{ formatDate(trip.updated_at) }}</span>
+    </div>
+  }
+</section>

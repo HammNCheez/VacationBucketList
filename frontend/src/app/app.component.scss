@@ -1,0 +1,156 @@
+:host {
+	display: block;
+}
+
+.topbar {
+	position: sticky;
+	top: 0;
+	z-index: 100;
+	padding: 0 0.6rem;
+	overflow: hidden;
+	isolation: isolate;
+	background:
+		linear-gradient(180deg, rgb(25 50 41 / 98%) 0%, rgb(45 77 60 / 96%) 72%, rgb(68 104 79 / 94%) 100%),
+		rgb(31 61 47 / 96%);
+	color: var(--topo-paper);
+	border-bottom: 1px solid rgb(240 223 186 / 42%);
+	box-shadow: 0 10px 20px rgb(28 44 36 / 22%);
+	backdrop-filter: blur(4px);
+	display: flex;
+	gap: 0.5rem;
+}
+
+.topbar::before,
+.topbar::after {
+	content: '';
+	position: absolute;
+	inset: auto -2% 0;
+	pointer-events: none;
+	z-index: 0;
+}
+
+.topbar::before {
+	height: 68%;
+	background: linear-gradient(180deg, rgb(17 36 30 / 20%), rgb(17 36 30 / 52%));
+	clip-path: polygon(
+		0% 100%,
+		4% 84%,
+		8% 61%,
+		12% 79%,
+		17% 48%,
+		22% 74%,
+		28% 36%,
+		34% 71%,
+		41% 30%,
+		49% 69%,
+		57% 42%,
+		65% 75%,
+		74% 38%,
+		82% 73%,
+		90% 45%,
+		96% 66%,
+		100% 100%
+	);
+}
+
+.topbar::after {
+	height: 52%;
+	background: linear-gradient(180deg, rgb(117 158 119 / 16%), rgb(117 158 119 / 38%));
+	clip-path: polygon(
+		0% 100%,
+		5% 88%,
+		10% 74%,
+		16% 90%,
+		23% 62%,
+		30% 88%,
+		38% 58%,
+		46% 91%,
+		55% 63%,
+		64% 89%,
+		73% 59%,
+		82% 90%,
+		91% 66%,
+		97% 82%,
+		100% 100%
+	);
+}
+
+.nav-left,
+.spacer,
+.nav-right {
+	position: relative;
+	z-index: 1;
+}
+
+.spacer {
+	flex: 1;
+}
+
+.nav-left,
+.nav-right {
+	display: flex;
+	align-items: center;
+	gap: 0.2rem;
+}
+
+.topbar a[mat-button],
+.topbar a[mat-icon-button] {
+	color: var(--topo-paper);
+}
+
+.brand-link {
+	font-family: 'Special Elite', 'Georgia', serif;
+	font-size: 1.05rem;
+	letter-spacing: 0.03em;
+}
+
+.nav-link {
+	font-weight: 600;
+}
+
+.nav-link .mat-icon {
+	margin-right: 0.3rem;
+	font-size: 20px;
+	width: 20px;
+	height: 20px;
+}
+
+.topbar a[mat-button]:hover,
+.topbar a[mat-icon-button]:hover {
+	background: rgb(240 223 186 / 16%);
+}
+
+.active-link {
+	font-weight: 700;
+	background: rgb(240 223 186 / 20%);
+}
+
+.content {
+	max-width: 1100px;
+	margin: 0 auto;
+	padding: 1.5rem 2rem;
+}
+
+@media (max-width: 720px) {
+	.content {
+		padding: 1.2rem 1rem 1.4rem;
+	}
+
+	.brand-link {
+		font-size: 0.95rem;
+	}
+
+	.nav-link {
+		padding: 0 0.5rem;
+	}
+}
+
+@media (max-width: 480px) {
+	.topbar {
+		padding: 0 0.25rem;
+	}
+
+	.content {
+		padding: 1rem 0.75rem 1.2rem;
+	}
+}

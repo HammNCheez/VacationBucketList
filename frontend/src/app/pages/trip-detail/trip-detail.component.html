@@ -1,0 +1,304 @@
+<section class="page-shell trip-detail-page">
+  <header class="page-header">
+    <button mat-button type="button" (click)="cancel()" class="back-btn">
+      <mat-icon>arrow_back</mat-icon>
+      {{ tripId ? 'Back to Trip' : 'Back to Trips' }}
+    </button>
+    <span class="header-spacer"></span>
+    <h1 class="page-title">{{ tripId ? 'Edit Trip' : 'New Trip' }}</h1>
+  </header>
+
+  @if (errorMessage) {
+    <p class="state-message error" role="alert" aria-live="assertive">{{ errorMessage }}</p>
+  }
+
+  <mat-card class="surface-card">
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <p class="form-help">Fields marked with * are required.</p>
+
+      <section class="form-section">
+        <header class="section-header-block">
+          <h2 class="section-headline">Trip Basics</h2>
+          <p class="section-subline">Name it, set destination details, and prioritize it.</p>
+        </header>
+
+        <div class="form-grid basics-grid">
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Title</mat-label>
+            <input matInput formControlName="title" placeholder="Summer in Tokyo" />
+            @if (isControlInvalid('title')) {
+              <mat-error>Title is required.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Location</mat-label>
+            <input matInput formControlName="location" placeholder="Tokyo, Japan" />
+            @if (isControlInvalid('location')) {
+              <mat-error>Location is required.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Origin</mat-label>
+            <input matInput formControlName="origin" placeholder="Raleigh, NC" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select formControlName="status">
+              @for (status of statuses; track status) {
+                <mat-option [value]="status">{{ status }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Priority</mat-label>
+            <mat-select formControlName="priority">
+              @for (priority of priorities; track priority) {
+                <mat-option [value]="priority">{{ priority }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <div class="activity-selector">
+            <span class="activity-label">Activity Level * <strong>{{ activityLevelSummary }}</strong></span>
+            <div class="activity-rating">
+              @for (level of activityLevels; track level) {
+                <button
+                  type="button"
+                  class="activity-button"
+                  [class.selected]="isActivityLevelSelected(level)"
+                  [class.dim]="level > (form.get('activity_level')?.value ?? 1)"
+                  [attr.aria-label]="'Set activity level to ' + level"
+                  [attr.aria-pressed]="level === (form.get('activity_level')?.value ?? 1)"
+                  (click)="setActivityLevel(level)"
+                >
+                  🔥
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <header class="section-header-block">
+          <h2 class="section-headline">Tags and People</h2>
+          <p class="section-subline">Organize this trip with tags and assign existing travelers.</p>
+        </header>
+
+        <div class="form-grid tags-grid">
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Trip Types</mat-label>
+            <mat-chip-grid #tripTypeChipGrid aria-label="Trip type tags">
+              @for (tripType of tripTypes; track tripType) {
+                <mat-chip-row (removed)="removeTripType(tripType)">
+                  {{ tripType }}
+                  <button matChipRemove type="button" [attr.aria-label]="'Remove ' + tripType">
+                    <mat-icon>cancel</mat-icon>
+                  </button>
+                </mat-chip-row>
+              }
+
+              <input
+                matInput
+                [formControl]="tripTypeInputControl"
+                [matChipInputFor]="tripTypeChipGrid"
+                [matAutocomplete]="tripTypeAutocomplete"
+                (keydown.enter)="handleTripTypeEnter($event)"
+                (keydown.tab)="handleTripTypeTab($event, tripTypeAutocompleteTrigger.activeOption?.value ?? null)"
+                #tripTypeAutocompleteTrigger="matAutocompleteTrigger"
+                placeholder="Type a tag and press Enter"
+              />
+            </mat-chip-grid>
+            <mat-hint>Select a suggestion or type a new tag and press Enter.</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>People</mat-label>
+            <mat-chip-grid #peopleChipGrid aria-label="People on this trip">
+              @for (person of selectedPeople; track person.id) {
+                <mat-chip-row (removed)="removePerson(person.id)">
+                  {{ person.name }}
+                  <button matChipRemove type="button" [attr.aria-label]="'Remove ' + person.name">
+                    <mat-icon>cancel</mat-icon>
+                  </button>
+                </mat-chip-row>
+              }
+
+              <input
+                matInput
+                [formControl]="peopleInputControl"
+                [matChipInputFor]="peopleChipGrid"
+                [matAutocomplete]="peopleAutocomplete"
+                (keydown.enter)="handlePeopleEnter($event, peopleAutocompleteTrigger.activeOption?.value ?? null)"
+                (keydown.tab)="handlePeopleTab($event, peopleAutocompleteTrigger.activeOption?.value ?? null)"
+                #peopleAutocompleteTrigger="matAutocompleteTrigger"
+                placeholder="Select existing people only"
+              />
+            </mat-chip-grid>
+            <mat-hint>Only existing people can be added here.</mat-hint>
+          </mat-form-field>
+        </div>
+      </section>
+
+      <mat-autocomplete
+        #tripTypeAutocomplete="matAutocomplete"
+        (optionSelected)="onTripTypeOptionSelected($event.option.value)"
+      >
+        @for (option of filteredTripTypeOptions; track option) {
+          <mat-option [value]="option">{{ option }}</mat-option>
+        }
+      </mat-autocomplete>
+
+      <mat-autocomplete
+        #peopleAutocomplete="matAutocomplete"
+        (optionSelected)="onPeopleOptionSelected($event.option.value)"
+      >
+        @for (person of filteredPeopleOptions; track person.id) {
+          <mat-option [value]="person.id">{{ person.name }}</mat-option>
+        }
+      </mat-autocomplete>
+
+      <section class="form-section">
+        <header class="section-header-block">
+          <h2 class="section-headline">Timing and Logistics</h2>
+          <p class="section-subline">Define dates and travel effort with compact planning controls.</p>
+        </header>
+
+        <div class="form-grid timing-grid">
+          <div class="date-mode-field span-2">
+            <p class="date-mode-label">Target Date Input</p>
+            <p class="date-mode-hint">Choose one: date range or exact start/end dates.</p>
+            <mat-radio-group [formControl]="dateModeControl" class="date-mode-group">
+              <mat-radio-button value="range" (change)="setDateMode('range')">Date Range</mat-radio-button>
+              <mat-radio-button value="exact" (change)="setDateMode('exact')"
+                >Start / End Dates</mat-radio-button
+              >
+            </mat-radio-group>
+            @if (dateModeErrorMessage) {
+              <p class="state-message error" role="alert" aria-live="assertive">{{ dateModeErrorMessage }}</p>
+            }
+          </div>
+
+          @if (dateModeControl.value === 'range') {
+            <div class="span-2">
+              <app-autocomplete-input
+                [label]="'Target Date Range'"
+                [options]="targetDateRangeOptions"
+                [control]="targetDateRangeControl"
+              />
+            </div>
+          }
+
+          @if (dateModeControl.value === 'exact') {
+            <mat-form-field appearance="outline">
+              <mat-label>Target Start Date</mat-label>
+              <input matInput type="date" formControlName="target_date_start" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Target End Date</mat-label>
+              <input matInput type="date" formControlName="target_date_end" />
+            </mat-form-field>
+          }
+
+          <mat-form-field appearance="outline" class="compact-field">
+            <mat-label>Travel Time (hrs)</mat-label>
+            <input matInput type="number" formControlName="travel_time_hours" />
+            <mat-hint>Blank = auto-calculated on save.</mat-hint>
+            @if (isControlInvalid('travel_time_hours')) {
+              <mat-error>Travel time must be zero or greater.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="compact-field">
+            <mat-label>Duration (days)</mat-label>
+            <input matInput type="number" formControlName="duration_days" />
+            @if (isControlInvalid('duration_days')) {
+              <mat-error>Duration must be zero or greater.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Notes</mat-label>
+            <textarea matInput rows="4" formControlName="notes"></textarea>
+          </mat-form-field>
+        </div>
+      </section>
+
+    <section class="nested-section">
+      <div class="section-header">
+        <h2 class="section-title">Cost Items</h2>
+        <button mat-button type="button" (click)="addCostItem()">
+          <mat-icon>add</mat-icon>
+          Add
+        </button>
+      </div>
+
+      @if (costItemControls.controls.length === 0) {
+        <p class="empty-hint">No cost items yet. Click Add to include one.</p>
+      }
+
+      @for (group of costItemControls.controls; track $index) {
+        <div class="inline-row" [formGroup]="$any(group)">
+          <mat-form-field appearance="outline">
+            <mat-label>Category</mat-label>
+            <input matInput formControlName="category" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Amount</mat-label>
+            <input matInput type="number" formControlName="amount" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Currency</mat-label>
+            <input matInput formControlName="currency" />
+          </mat-form-field>
+          <button mat-icon-button color="warn" type="button" (click)="removeCostItem($index)" aria-label="Remove cost item">
+            <mat-icon>delete_outline</mat-icon>
+          </button>
+        </div>
+      }
+    </section>
+
+    <section class="nested-section">
+      <div class="section-header">
+        <h2 class="section-title">Comments</h2>
+        <button mat-button type="button" (click)="addComment()">
+          <mat-icon>add</mat-icon>
+          Add
+        </button>
+      </div>
+
+      @if (commentControls.controls.length === 0) {
+        <p class="empty-hint">No comments yet. Click Add to include one.</p>
+      }
+
+      @for (group of commentControls.controls; track $index) {
+        <div class="inline-row" [formGroup]="$any(group)">
+          <mat-form-field appearance="outline" class="comment-body-inline">
+            <mat-label>Comment</mat-label>
+            <textarea matInput formControlName="body" rows="2"></textarea>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>URL</mat-label>
+            <input matInput formControlName="url" />
+          </mat-form-field>
+          <button mat-icon-button color="warn" type="button" (click)="removeComment($index)" aria-label="Remove comment">
+            <mat-icon>delete_outline</mat-icon>
+          </button>
+        </div>
+      }
+    </section>
+
+    <div class="actions">
+      <button mat-button type="button" (click)="cancel()">Cancel</button>
+      <button mat-flat-button color="primary" type="submit" [disabled]="saving || form.invalid">
+        {{ saving ? 'Saving...' : 'Save Trip' }}
+      </button>
+    </div>
+    </form>
+  </mat-card>
+</section>
