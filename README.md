@@ -10,7 +10,7 @@ A personal web application for cataloguing, planning, and tracking future vacati
 - **Distance Calculation** — Automatically calculates driving distance from your home location to each destination via [OpenRouteService](https://openrouteservice.org/).
 - **Cost Tracking** — Add itemized cost estimates per trip (flights, lodging, food, etc.) with optional currency codes and automatic per-person split calculation.
 - **People Roster** — Maintain a saved list of travel companions and tag them on trips.
-- **Autocomplete Fields** — Trip type, date range, and cost category fields autocomplete from your previous entries, all normalized to Title Case.
+- **Trip Type Tags** — Tag your trips to group similar experiences together.
 - **Filtering & Search** — Filter trips by status, priority, trip type, activity level, and distance range. Full-text search across title and location.
 - **Data Export & Restore** — Export all data as a portable JSON file and restore it on any instance.
 - **Trip Views** — List view with filter sidebar and detail view with full trip form.

@@ -12,12 +12,8 @@ Add some widgets and summaries to the home page
 
 Update the design for the top nav
 
-### Trip Page
 
-- Edit trip page is ugly
-- Trip Types should auto populate and when hit tab it should encapsulate it into a pill to know it is distinct. 
+## Future Work
 
-### Settings
-
-- Need to add a restore Link
-- how to add Map API key?
+- **Security boundary (MVP)** — app is local-only. Do not expose backend publicly or over the open internet without adding authentication first.
+- **Photo uploads** — Comments currently support a URL to a photo. True file upload can be added as a future enhancement.
