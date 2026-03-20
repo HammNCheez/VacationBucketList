@@ -88,8 +88,8 @@
 }
 
 .activity-button:hover {
-  background: rgb(0 0 0 / 5%);
-  transform: translateY(-1px);
+  background: rgb(255 140 0 / 12%);
+  transform: translateY(-2px) scale(1.1);
 }
 
 .activity-button:focus-visible {
@@ -98,8 +98,12 @@
 }
 
 .activity-button.selected {
-  background: rgb(0 0 0 / 7%);
-  border-color: var(--topo-line);
+  transform: scale(1.15);
+}
+
+.activity-button.dim {
+  filter: grayscale(0.6);
+  opacity: 0.35;
 }
 
 .date-mode-field {
