@@ -215,6 +215,43 @@ npx playwright test
 
 ---
 
+## CI Container Publishing (GitHub Actions)
+
+This repository includes a workflow at `.github/workflows/docker-publish.yml` that:
+
+- Runs backend and frontend tests first.
+- Builds both Docker images only after tests pass.
+- Pushes images to GitHub Container Registry (GHCR) on trusted push events.
+
+Published image names:
+
+- `ghcr.io/<owner>/vacationbucketlist-backend`
+- `ghcr.io/<owner>/vacationbucketlist-frontend`
+
+Workflow trigger behavior:
+
+- `pull_request`: runs tests and image builds without pushing.
+- `push` to the default branch: runs tests, builds, and pushes.
+- `push` tag `v*` (example `v1.2.3`): runs tests, builds, and pushes release tags.
+
+### Versioning Best Practices
+
+Use git tags as the source of truth for release versions.
+
+- Always publish immutable SHA tags (for example `sha-1a2b3c4`).
+- Publish semver tags from git release tags (for example `v1.2.3` -> `1.2.3`, `1.2`, `1`).
+- Publish `latest` only from the default branch.
+- Use SHA or semver tags for production deployments, not moving branch tags.
+
+Recommended release flow:
+
+1. Merge validated changes to the default branch.
+2. Create an annotated tag like `v1.3.0` on the release commit.
+3. Push the tag to trigger semver image publication for both images.
+4. Deploy using the semver tag (or exact SHA for maximum reproducibility).
+
+---
+
 ## API Overview
 
 | Method | Path | Description |
