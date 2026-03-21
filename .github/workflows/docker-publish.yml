@@ -42,10 +42,12 @@ jobs:
           cache-dependency-path: backend/requirements-dev.txt
 
       - name: Install backend test dependencies
-        run: pip install -r backend/requirements-dev.txt
+        working-directory: backend
+        run: pip install -r requirements-dev.txt
 
       - name: Run backend tests
-        run: pytest backend/tests
+        working-directory: backend
+        run: pytest tests
 
   test_frontend:
     name: Frontend tests
