@@ -1,10 +1,17 @@
 from collections.abc import Generator
+from pathlib import Path
+import sys
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
+
+BACKEND_DIR = Path(__file__).resolve().parents[1]
+if str(BACKEND_DIR) not in sys.path:
+    # Append (not prepend) so third-party packages keep priority over local folders.
+    sys.path.append(str(BACKEND_DIR))
 
 from database.connection import get_db
 from main import create_app
