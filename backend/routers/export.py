@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import logging
 from typing import Annotated
 import json
 
@@ -18,6 +19,7 @@ from services.restore import RestoreValidationError, parse_restore_payload, rest
 SCHEMA_VERSION = "1.0"
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 RestoreFile = Annotated[UploadFile, File(...)]
 DbSession = Annotated[Session, Depends(get_db)]
 
@@ -40,12 +42,16 @@ def export_data(
     people_repository: Annotated[PeopleRepository, Depends(get_people_repository)],
     settings_repository: Annotated[SettingsRepository, Depends(get_settings_repository)],
 ) -> ExportResponse:
+    logger.debug("export_start")
     settings = settings_repository.get()
+    trips = [trip_to_response(trip) for trip in trip_repository.all()]
+    people = [PersonRead.model_validate(person) for person in people_repository.list()]
+    logger.info("export_success trips=%s people=%s", len(trips), len(people))
     return ExportResponse(
         schema_version=SCHEMA_VERSION,
         exported_at=datetime.now(timezone.utc),
-        trips=[trip_to_response(trip) for trip in trip_repository.all()],
-        people=[PersonRead.model_validate(person) for person in people_repository.list()],
+        trips=trips,
+        people=people,
         settings=SettingsRead.model_validate(settings) if settings else SettingsRead(),
     )
 
@@ -55,15 +61,18 @@ async def restore_data(
     file: RestoreFile,
     db: DbSession,
 ) -> RestoreResponse:
+    logger.debug("restore_start filename=%s", file.filename)
     try:
         raw_payload = await file.read()
         parsed_json = json.loads(raw_payload)
     except UnicodeDecodeError as error:
+        logger.error("restore_invalid_encoding filename=%s", file.filename)
         raise HTTPException(
             status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Restore file must be UTF-8 JSON",
         ) from error
     except json.JSONDecodeError as error:
+        logger.error("restore_invalid_json filename=%s error=%s", file.filename, str(error))
         raise HTTPException(
             status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Restore file is not valid JSON",
@@ -72,14 +81,25 @@ async def restore_data(
     try:
         restore_payload = parse_restore_payload(parsed_json)
     except RestoreValidationError as error:
+        logger.error(
+            "restore_validation_failed field=payload_schema message=%s payload=%s",
+            str(error),
+            parsed_json,
+        )
         raise HTTPException(
             status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(error),
         ) from error
     except ValidationError as error:
+        logger.error(
+            "restore_pydantic_validation_failed field=payload errors=%s",
+            error.errors(),
+        )
         raise HTTPException(
             status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=error.errors(),
         ) from error
 
-    return restore_database(db, restore_payload)
+    result = restore_database(db, restore_payload)
+    logger.info("restore_success")
+    return result

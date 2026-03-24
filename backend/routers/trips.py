@@ -147,19 +147,41 @@ def _recalculate_distance(
     warnings: list[WarningMessage],
     log_context: dict,
 ) -> None:
+    logger.debug(
+        "distance_recalculate_start origin=%s location=%s",
+        origin,
+        location,
+    )
     if not origin or not location:
         warnings.append(_distance_warning())
         _clear_distance(values)
-        logger.warning("distance_unavailable_missing_input", extra=log_context)
+        logger.error(
+            "distance_unavailable_missing_input origin=%s location=%s context=%s",
+            origin,
+            location,
+            log_context,
+        )
         return
 
     try:
         distance = distance_service.calculate(origin, location)
         _apply_distance_result(values, distance)
+        logger.info(
+            "distance_recalculate_success origin=%s location=%s distance_miles=%.2f",
+            origin,
+            location,
+            distance.distance_miles,
+        )
     except DistanceUnavailableError as error:
         warnings.append(_distance_warning())
         _clear_distance(values)
-        logger.warning("distance_unavailable_ors", extra={**log_context, "error": str(error)})
+        logger.error(
+            "distance_unavailable_ors origin=%s location=%s error=%s context=%s",
+            origin,
+            location,
+            str(error),
+            log_context,
+        )
 
 
 def _normalize_payload(payload: TripCreate | TripUpdate) -> dict:
@@ -191,18 +213,37 @@ def list_trips(
     target_date_start: Annotated[date | None, Query()] = None,
     target_date_end: Annotated[date | None, Query()] = None,
 ) -> list[TripRead]:
+    logger.debug(
+        "trips_list_start status=%s priority=%s trip_type=%s activity_level=%s distance_min=%s distance_max=%s search=%s",
+        status,
+        priority,
+        trip_type,
+        activity_level,
+        distance_min,
+        distance_max,
+        search,
+    )
     status = status or []
     priority = priority or []
     trip_type = trip_type or []
     activity_level = activity_level or []
 
     if any(level < 1 or level > 5 for level in activity_level):
+        logger.error(
+            "trips_list_invalid_activity_level field=activity_level value=%s",
+            activity_level,
+        )
         raise HTTPException(
             status_code=http_status.HTTP_400_BAD_REQUEST,
             detail="activity_level values must be between 1 and 5",
         )
 
     if distance_min is not None and distance_max is not None and distance_min > distance_max:
+        logger.error(
+            "trips_list_invalid_distance_range field=distance_min,distance_max values=%s,%s",
+            distance_min,
+            distance_max,
+        )
         raise HTTPException(
             status_code=http_status.HTTP_400_BAD_REQUEST,
             detail="distance_min must be <= distance_max",
@@ -219,6 +260,7 @@ def list_trips(
         target_date_start=target_date_start,
         target_date_end=target_date_end,
     )
+    logger.info("trips_list_success count=%s", len(trips))
     return [trip_to_response(trip) for trip in trips]
 
 
@@ -228,8 +270,11 @@ def autocomplete_values(
 ) -> list[str]:
     allowed = {"trip_type", "target_date_range", "cost_category"}
     if field not in allowed:
+        logger.error("trips_autocomplete_invalid_field field=field value=%s", field)
         raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail="Invalid field")
-    return repository.autocomplete_values(field)
+    values = repository.autocomplete_values(field)
+    logger.info("trips_autocomplete_success field=%s count=%s", field, len(values))
+    return values
 
 
 @router.get("/{trip_id}")
@@ -237,11 +282,14 @@ def get_trip(
     trip_id: int,
     repository: Annotated[TripRepository, Depends(get_trip_repository)],
 ) -> TripRead:
+    logger.debug("trip_get_start trip_id=%s", trip_id)
     trip = repository.get(trip_id)
     if not trip:
+        logger.error("trip_get_not_found field=trip_id value=%s", trip_id)
         raise HTTPException(
             status_code=http_status.HTTP_404_NOT_FOUND, detail=TRIP_NOT_FOUND_MESSAGE
         )
+    logger.info("trip_get_success trip_id=%s", trip_id)
     return trip_to_response(trip)
 
 
@@ -252,6 +300,7 @@ def create_trip(
     settings_repository: Annotated[SettingsRepository, Depends(get_settings_repository)],
     distance_service: Annotated[DistanceService, Depends(get_distance_service)],
 ) -> TripMutationResponse:
+    logger.debug("trip_create_start title=%s location=%s", payload.title, payload.location)
     values = _normalize_payload(payload)
 
     settings = settings_repository.get()
@@ -269,6 +318,7 @@ def create_trip(
     )
 
     trip = repository.create(values)
+    logger.info("trip_create_success trip_id=%s warnings=%s", trip.id, len(warnings))
     return trip_to_response(trip, warnings)
 
 
@@ -280,8 +330,10 @@ def update_trip(
     settings_repository: Annotated[SettingsRepository, Depends(get_settings_repository)],
     distance_service: Annotated[DistanceService, Depends(get_distance_service)],
 ) -> TripMutationResponse:
+    logger.debug("trip_update_start trip_id=%s", trip_id)
     existing = repository.get(trip_id)
     if not existing:
+        logger.error("trip_update_not_found field=trip_id value=%s", trip_id)
         raise HTTPException(
             status_code=http_status.HTTP_404_NOT_FOUND, detail=TRIP_NOT_FOUND_MESSAGE
         )
@@ -309,9 +361,11 @@ def update_trip(
 
     trip = repository.update(trip_id, values)
     if not trip:
+        logger.error("trip_update_not_found_after_update field=trip_id value=%s", trip_id)
         raise HTTPException(
             status_code=http_status.HTTP_404_NOT_FOUND, detail=TRIP_NOT_FOUND_MESSAGE
         )
+    logger.info("trip_update_success trip_id=%s warnings=%s", trip_id, len(warnings))
     return trip_to_response(trip, warnings)
 
 
@@ -320,8 +374,11 @@ def delete_trip(
     trip_id: int,
     repository: Annotated[TripRepository, Depends(get_trip_repository)],
 ) -> None:
+    logger.debug("trip_delete_start trip_id=%s", trip_id)
     deleted = repository.delete(trip_id)
     if not deleted:
+        logger.error("trip_delete_not_found field=trip_id value=%s", trip_id)
         raise HTTPException(
             status_code=http_status.HTTP_404_NOT_FOUND, detail=TRIP_NOT_FOUND_MESSAGE
         )
+    logger.info("trip_delete_success trip_id=%s", trip_id)
