@@ -115,6 +115,8 @@ def test_restore_replaces_existing_database_data(client: TestClient) -> None:
         "home_city": "Raleigh",
         "home_zip": "27601",
         "ors_api_key": "restored-ors-key",
+        "ors_api_key_source": "database",
+        "ors_api_key_from_environment": False,
     }
 
 

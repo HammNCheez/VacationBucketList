@@ -7,8 +7,18 @@ import { TripDetailComponent } from './trip-detail.component';
 import { TripService } from '../../core/services/trip.service';
 import { PeopleService } from '../../core/services/people.service';
 import { SettingsService } from '../../core/services/settings.service';
+import { Settings } from '../../core/models/settings.model';
 import { Trip, TripCreate } from '../../core/models/trip.model';
 import { Person } from '../../core/models/person.model';
+
+const mockSettings = (overrides?: Partial<Settings>): Settings => ({
+  home_city: null,
+  home_zip: null,
+  ors_api_key: null,
+  ors_api_key_source: 'none',
+  ors_api_key_from_environment: false,
+  ...overrides,
+});
 
 describe('TripDetailComponent', () => {
   let fixture: ComponentFixture<TripDetailComponent>;
@@ -59,7 +69,7 @@ describe('TripDetailComponent', () => {
     await createComponent();
 
     peopleService.list.and.returnValue(of([{ id: 1, name: 'Sam' } as Person]));
-    settingsService.getSettings.and.returnValue(of({ home_city: null, home_zip: null, ors_api_key: null }));
+    settingsService.getSettings.and.returnValue(of(mockSettings()));
     tripService.getAutocomplete.and.callFake((field) =>
       field === 'target_date_range' ? of(['Late Summer']) : of(['Beach'])
     );
@@ -80,9 +90,7 @@ describe('TripDetailComponent', () => {
 
     peopleService.list.and.returnValue(of([]));
     tripService.getAutocomplete.and.returnValue(of([]));
-    settingsService.getSettings.and.returnValue(
-      of({ home_city: 'Seattle', home_zip: '98101', ors_api_key: null })
-    );
+    settingsService.getSettings.and.returnValue(of(mockSettings({ home_city: 'Seattle', home_zip: '98101' })));
 
     fixture.detectChanges();
 
@@ -116,7 +124,7 @@ describe('TripDetailComponent', () => {
     };
 
     peopleService.list.and.returnValue(of([{ id: 5, name: 'Jordan' }]));
-    settingsService.getSettings.and.returnValue(of({ home_city: 'Seattle', home_zip: null, ors_api_key: null }));
+    settingsService.getSettings.and.returnValue(of(mockSettings({ home_city: 'Seattle' })));
     tripService.getAutocomplete.and.callFake((field) =>
       field === 'target_date_range' ? of(['Early Summer']) : of(['Food'])
     );
@@ -139,7 +147,7 @@ describe('TripDetailComponent', () => {
     await createComponent();
 
     peopleService.list.and.returnValue(of([]));
-    settingsService.getSettings.and.returnValue(of({ home_city: null, home_zip: null, ors_api_key: null }));
+    settingsService.getSettings.and.returnValue(of(mockSettings()));
     tripService.getAutocomplete.and.returnValue(of([]));
     tripService.createTrip.and.returnValue(of({} as Trip));
 
@@ -170,7 +178,7 @@ describe('TripDetailComponent', () => {
     await createComponent();
 
     peopleService.list.and.returnValue(of([]));
-    settingsService.getSettings.and.returnValue(of({ home_city: null, home_zip: null, ors_api_key: null }));
+    settingsService.getSettings.and.returnValue(of(mockSettings()));
     tripService.getAutocomplete.and.returnValue(of([]));
     tripService.createTrip.and.returnValue(of({} as Trip));
 
@@ -192,7 +200,7 @@ describe('TripDetailComponent', () => {
     await createComponent();
 
     peopleService.list.and.returnValue(of([]));
-    settingsService.getSettings.and.returnValue(of({ home_city: null, home_zip: null, ors_api_key: null }));
+    settingsService.getSettings.and.returnValue(of(mockSettings()));
     tripService.getAutocomplete.and.returnValue(of(['Beach']));
 
     fixture.detectChanges();
@@ -214,7 +222,7 @@ describe('TripDetailComponent', () => {
         { id: 2, name: 'Jordan' },
       ] as Person[])
     );
-    settingsService.getSettings.and.returnValue(of({ home_city: null, home_zip: null, ors_api_key: null }));
+    settingsService.getSettings.and.returnValue(of(mockSettings()));
     tripService.getAutocomplete.and.returnValue(of([]));
 
     fixture.detectChanges();
@@ -229,7 +237,7 @@ describe('TripDetailComponent', () => {
     await createComponent();
 
     peopleService.list.and.returnValue(of([{ id: 1, name: 'Sam' }]));
-    settingsService.getSettings.and.returnValue(of({ home_city: null, home_zip: null, ors_api_key: null }));
+    settingsService.getSettings.and.returnValue(of(mockSettings()));
     tripService.getAutocomplete.and.returnValue(of([]));
 
     fixture.detectChanges();
@@ -243,7 +251,7 @@ describe('TripDetailComponent', () => {
     await createComponent();
 
     peopleService.list.and.returnValue(of([]));
-    settingsService.getSettings.and.returnValue(of({ home_city: null, home_zip: null, ors_api_key: null }));
+    settingsService.getSettings.and.returnValue(of(mockSettings()));
     tripService.getAutocomplete.and.returnValue(of([]));
     tripService.createTrip.and.returnValue(of({} as Trip));
 
@@ -278,7 +286,7 @@ describe('TripDetailComponent', () => {
     await createComponent(3);
 
     peopleService.list.and.returnValue(of([]));
-    settingsService.getSettings.and.returnValue(of({ home_city: 'Ignored', home_zip: null, ors_api_key: null }));
+    settingsService.getSettings.and.returnValue(of(mockSettings({ home_city: 'Ignored' })));
     tripService.getAutocomplete.and.returnValue(of([]));
     tripService.getTrip.and.returnValue(
       of({
