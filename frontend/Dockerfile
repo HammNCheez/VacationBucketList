@@ -22,8 +22,11 @@ RUN rm -rf /usr/share/nginx/html/*
 # Copy Angular production build (Angular 17+ application builder outputs to browser/)
 COPY --from=builder /app/dist/frontend/browser /usr/share/nginx/html
 
-# Custom nginx config (SPA routing + caching headers)
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# nginx config: copied to templates so nginx startup runs envsubst for BACKEND_URL
+COPY nginx.conf /etc/nginx/templates/default.conf.template
+
+# Default backend target for API proxy (override in docker compose if needed)
+ENV BACKEND_URL=http://localhost:8000
 
 EXPOSE 80
 

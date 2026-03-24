@@ -1,0 +1,36 @@
+# docker-compose.sqlite.yml
+# Deploys backend and frontend from pre-built GHCR images using a host-mounted SQLite database.
+#
+# Prerequisites:
+#   1. Copy .env.example to .env and fill in all values.
+#   2. Create the host data directory before starting:
+#        mkdir -p /config/vacation-bucket-list
+#
+# Usage:
+#   docker compose -f docker-compose.sqlite.yml up -d
+#   docker compose -f docker-compose.sqlite.yml pull && docker compose -f docker-compose.sqlite.yml up -d   # upgrade
+
+services:
+  backend:
+    image: ghcr.io/${GHCR_OWNER}/vacationbucketlist-backend:${IMAGE_TAG:-latest}
+    pull_policy: always
+    ports:
+      - "8000:8000"
+    environment:
+      DB_TYPE: sqlite
+      DATABASE_URL: sqlite:////config/vacation_bucket_list.db
+      ORS_API_KEY: ${ORS_API_KEY}
+    volumes:
+      - ${DATA_DIR:-/config/vacation-bucket-list}:/config
+    restart: unless-stopped
+
+  frontend:
+    image: ghcr.io/${GHCR_OWNER}/vacationbucketlist-frontend:${IMAGE_TAG:-latest}
+    pull_policy: always
+    ports:
+      - "80:80"
+    environment:
+      BACKEND_URL: ${BACKEND_URL:-http://localhost:8000}
+    depends_on:
+      - backend
+    restart: unless-stopped

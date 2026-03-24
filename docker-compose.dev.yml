@@ -1,0 +1,21 @@
+# docker-compose.dev.yml
+# Override file that replaces GHCR images with local builds for development.
+# Use alongside a base compose file:
+#
+#   docker compose -f docker-compose.sqlite.yml -f docker-compose.dev.yml up --build
+#   docker compose -f docker-compose.mysql.yml  -f docker-compose.dev.yml up --build
+
+services:
+  backend:
+    image: vacationbucketlist-backend:dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+    pull_policy: never
+
+  frontend:
+    image: vacationbucketlist-frontend:dev
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    pull_policy: never

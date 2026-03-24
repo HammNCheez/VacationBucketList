@@ -62,51 +62,46 @@ For local development, copy `.env.example` to `.env` in the `backend/` directory
 
 ## Building & Running with Docker Compose
 
-Two compose configurations are provided below — one for a pre-existing MySQL database and one using a local SQLite file stored on the host.
+Pre-built images are published to GitHub Container Registry (GHCR) by the CI pipeline and pulled directly — no local Docker build required.
+
+Two compose files are provided: one for a pre-existing MySQL database and one using a local SQLite file stored on the host.
+
+### 1. Configure your environment
+
+Copy the example env file and fill in your values:
+
+```bash
+cp .env.example .env
+```
+
+Key variables in `.env`:
+
+| Variable | Description |
+|---|---|
+| `GHCR_OWNER` | Your lowercase GitHub username (must match the image owner in GHCR) |
+| `IMAGE_TAG` | Tag to deploy: semver (e.g. `1.2.3`), short SHA (`sha-1a2b3c4`), or `latest` |
+| `ORS_API_KEY` | OpenRouteService API key for distance calculations |
 
 ### Option 1: External MySQL Database
 
-Use this when you have an existing MySQL server already provisioned (e.g. a managed cloud database or a shared team instance).
+Use this when you have an existing MySQL server already provisioned (e.g. a managed cloud database or a shared home server).
 
-```yaml
-# docker-compose.mysql.yml
-services:
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    environment:
-      DB_TYPE: mysql
-      DB_HOST: your-mysql-host       # hostname or IP of your MySQL server
-      DB_PORT: 3306
-      DB_NAME: vacation_bucket_list
-      DB_USER: your_db_user
-      DB_PASSWORD: your_db_password
-      ORS_API_KEY: your_ors_api_key
-    restart: unless-stopped
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
-    restart: unless-stopped
-```
-
-Run with:
+Also set `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` in `.env`, then:
 
 ```bash
 docker compose -f docker-compose.mysql.yml up -d
 ```
 
+To pull the latest images and restart:
+
+```bash
+docker compose -f docker-compose.mysql.yml pull
+docker compose -f docker-compose.mysql.yml up -d
+```
+
 The application will be available at `http://localhost`. The backend API and Swagger docs are at `http://localhost:8000/docs`.
 
-> **Note:** Ensure the target MySQL database and user exist before starting the containers. The application will apply Alembic migrations automatically on startup and create the required tables.
+> **Note:** Ensure the target MySQL database and user exist before starting the containers. The application will apply Alembic migrations automatically on startup.
 
 ---
 
@@ -114,46 +109,30 @@ The application will be available at `http://localhost`. The backend API and Swa
 
 Use this when running on a VM or home server and you want the SQLite database file stored on the host filesystem for persistence and easy backup.
 
-```yaml
-# docker-compose.sqlite.yml
-services:
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    environment:
-      DB_TYPE: sqlite
-      DATABASE_URL: sqlite:////config/vacation_bucket_list.db
-      ORS_API_KEY: your_ors_api_key
-    volumes:
-      - /config/vacation-bucket-list:/config   # host path : container path
-    restart: unless-stopped
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
-    restart: unless-stopped
-```
-
-Run with:
+Optionally set `DATA_DIR` in `.env` to override the default host path (`/config/vacation-bucket-list`), then:
 
 ```bash
-# Create the config directory on the host if it doesn't exist
 mkdir -p /config/vacation-bucket-list
-
 docker compose -f docker-compose.sqlite.yml up -d
 ```
 
-The SQLite database file will be stored at `/config/vacation-bucket-list/vacation_bucket_list.db` on the host, surviving container restarts and upgrades.
+The SQLite database file will be stored at `$DATA_DIR/vacation_bucket_list.db` on the host, surviving container restarts and upgrades.
 
 > **Tip:** Back up the `.db` file regularly, or use the built-in **Export** feature in the Settings page to save a portable JSON backup.
+
+---
+
+### Building locally (development)
+
+Use `docker-compose.dev.yml` as an override to replace the GHCR images with local builds:
+
+```bash
+# SQLite + local build
+docker compose -f docker-compose.sqlite.yml -f docker-compose.dev.yml up --build
+
+# MySQL + local build
+docker compose -f docker-compose.mysql.yml -f docker-compose.dev.yml up --build
+```
 
 ---
 

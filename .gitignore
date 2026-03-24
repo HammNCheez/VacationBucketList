@@ -4,3 +4,4 @@ __pycache__/
 .venv/
 backend/.env
 backend/vacation_bucket_list.db
+.env
