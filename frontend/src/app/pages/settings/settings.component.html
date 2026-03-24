@@ -26,6 +26,16 @@
         <mat-hint>Stored locally and used for distance lookups.</mat-hint>
       </mat-form-field>
 
+      <p
+        class="ors-indicator"
+        [class.environment]="orsApiKeySource === 'environment'"
+        [class.database]="orsApiKeySource === 'database'"
+        [class.none]="orsApiKeySource === 'none'"
+        aria-live="polite"
+      >
+        {{ orsApiKeySourceLabel }}
+      </p>
+
       <div class="actions">
         <button mat-flat-button color="primary" type="submit" [disabled]="saving">
           {{ saving ? 'Saving...' : 'Save Settings' }}

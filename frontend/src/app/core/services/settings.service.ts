@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 
 import { ExportPayload, RestoreResponse, Settings } from '../models/settings.model';
 
+type SettingsUpdatePayload = Pick<Settings, 'home_city' | 'home_zip' | 'ors_api_key'>;
+
 @Injectable({ providedIn: 'root' })
 export class SettingsService {
   private readonly baseUrl = '/api/settings';
@@ -14,7 +16,7 @@ export class SettingsService {
     return this.http.get<Settings>(this.baseUrl);
   }
 
-  updateSettings(payload: Settings): Observable<Settings> {
+  updateSettings(payload: SettingsUpdatePayload): Observable<Settings> {
     return this.http.put<Settings>(this.baseUrl, payload);
   }
 

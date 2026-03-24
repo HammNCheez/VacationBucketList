@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import logging
+import os
 
 import httpx
 
@@ -27,11 +28,30 @@ class DistanceService:
         self.settings_repository = settings_repository
 
     @property
-    def api_key(self) -> str | None:
+    def env_api_key(self) -> str | None:
+        api_key = os.getenv("ORS_API_KEY")
+        if not api_key:
+            return None
+        return api_key.strip() or None
+
+    @property
+    def db_api_key(self) -> str | None:
         settings = self.settings_repository.get()
         if not settings:
             return None
         return settings.ors_api_key
+
+    @property
+    def api_key(self) -> str | None:
+        return self.env_api_key or self.db_api_key
+
+    @property
+    def api_key_source(self) -> str:
+        if self.env_api_key:
+            return "environment"
+        if self.db_api_key:
+            return "database"
+        return "none"
 
     def _require_key(self) -> str:
         api_key = self.api_key

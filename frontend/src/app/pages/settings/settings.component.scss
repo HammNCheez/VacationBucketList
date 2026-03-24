@@ -12,6 +12,25 @@
   grid-column: 1 / -1;
 }
 
+.ors-indicator {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+.ors-indicator.environment {
+  color: #0c4a6e;
+}
+
+.ors-indicator.database {
+  color: #14532d;
+}
+
+.ors-indicator.none {
+  color: #7f1d1d;
+}
+
 .actions {
   display: flex;
   justify-content: flex-end;

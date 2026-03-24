@@ -1,7 +1,14 @@
-export interface Settings {
+export type OrsApiKeySource = 'environment' | 'database' | 'none';
+
+export interface SettingsData {
   home_city: string | null;
   home_zip: string | null;
   ors_api_key: string | null;
+}
+
+export interface Settings extends SettingsData {
+  ors_api_key_source: OrsApiKeySource;
+  ors_api_key_from_environment: boolean;
 }
 
 export interface ExportPayload {
@@ -9,7 +16,7 @@ export interface ExportPayload {
   exported_at: string;
   trips: unknown[];
   people: unknown[];
-  settings: Settings;
+  settings: SettingsData;
 }
 
 export interface RestoreResponse {

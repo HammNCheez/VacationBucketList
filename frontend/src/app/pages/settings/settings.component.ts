@@ -7,7 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 
-import { Settings } from '../../core/models/settings.model';
+import { OrsApiKeySource, Settings } from '../../core/models/settings.model';
 import { SettingsService } from '../../core/services/settings.service';
 
 @Component({
@@ -35,6 +35,7 @@ export class SettingsComponent implements OnInit {
   });
 
   saving = false;
+  orsApiKeySource: OrsApiKeySource = 'none';
   message = '';
   messageIsSuccess = true;
   restoreMessage = '';
@@ -49,9 +50,28 @@ export class SettingsComponent implements OnInit {
   ngOnInit(): void {
     this.settingsService.getSettings().subscribe({
       next: (settings) => {
-        this.form.patchValue(settings);
+        this.applySettings(settings);
       },
     });
+  }
+
+  get orsApiKeySourceLabel(): string {
+    if (this.orsApiKeySource === 'environment') {
+      return 'Using backend environment variable (ORS_API_KEY)';
+    }
+    if (this.orsApiKeySource === 'database') {
+      return 'Using key saved in database settings';
+    }
+    return 'No ORS API key configured';
+  }
+
+  private applySettings(settings: Settings): void {
+    this.form.patchValue({
+      home_city: settings.home_city,
+      home_zip: settings.home_zip,
+      ors_api_key: settings.ors_api_key,
+    });
+    this.orsApiKeySource = settings.ors_api_key_source;
   }
 
   save(): void {
@@ -59,9 +79,12 @@ export class SettingsComponent implements OnInit {
     this.message = '';
     this.messageIsSuccess = true;
 
-    this.settingsService.updateSettings(this.form.getRawValue() as Settings).subscribe({
-      next: () => {
+    this.settingsService
+      .updateSettings(this.form.getRawValue() as Pick<Settings, 'home_city' | 'home_zip' | 'ors_api_key'>)
+      .subscribe({
+      next: (settings) => {
         this.saving = false;
+        this.applySettings(settings);
         this.messageIsSuccess = true;
         this.message = 'Settings saved.';
       },

@@ -80,6 +80,14 @@ class SettingsRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+SettingsOrsKeySource = Literal["environment", "database", "none"]
+
+
+class SettingsResolvedRead(SettingsRead):
+    ors_api_key_source: SettingsOrsKeySource = "none"
+    ors_api_key_from_environment: bool = False
+
+
 class TripBase(BaseModel):
     title: str = Field(min_length=1, max_length=255)
     location: str = Field(min_length=1, max_length=255)

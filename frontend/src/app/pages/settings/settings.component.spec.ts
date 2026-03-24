@@ -34,7 +34,13 @@ describe('SettingsComponent', () => {
 
   it('loads settings on init', () => {
     settingsService.getSettings.and.returnValue(
-      of({ home_city: 'Austin', home_zip: '78701', ors_api_key: 'abc123' })
+      of({
+        home_city: 'Austin',
+        home_zip: '78701',
+        ors_api_key: 'abc123',
+        ors_api_key_source: 'database',
+        ors_api_key_from_environment: false,
+      })
     );
 
     fixture.detectChanges();
@@ -42,14 +48,27 @@ describe('SettingsComponent', () => {
     expect(settingsService.getSettings).toHaveBeenCalled();
     expect(component.form.get('home_city')?.value).toBe('Austin');
     expect(component.form.get('ors_api_key')?.value).toBe('abc123');
+    expect(component.orsApiKeySource).toBe('database');
   });
 
   it('saves settings', () => {
     settingsService.getSettings.and.returnValue(
-      of({ home_city: null, home_zip: null, ors_api_key: null })
+      of({
+        home_city: null,
+        home_zip: null,
+        ors_api_key: null,
+        ors_api_key_source: 'none',
+        ors_api_key_from_environment: false,
+      })
     );
     settingsService.updateSettings.and.returnValue(
-      of({ home_city: 'Paris', home_zip: '75001', ors_api_key: 'ors-key-1' })
+      of({
+        home_city: 'Paris',
+        home_zip: '75001',
+        ors_api_key: 'ors-key-1',
+        ors_api_key_source: 'database',
+        ors_api_key_from_environment: false,
+      })
     );
 
     fixture.detectChanges();
@@ -71,7 +90,13 @@ describe('SettingsComponent', () => {
 
   it('exports data as a download', () => {
     settingsService.getSettings.and.returnValue(
-      of({ home_city: null, home_zip: null, ors_api_key: null })
+      of({
+        home_city: null,
+        home_zip: null,
+        ors_api_key: null,
+        ors_api_key_source: 'none',
+        ors_api_key_from_environment: false,
+      })
     );
 
     const payload: ExportPayload = {
@@ -110,7 +135,13 @@ describe('SettingsComponent', () => {
 
   it('restores data from selected file', () => {
     settingsService.getSettings.and.returnValue(
-      of({ home_city: null, home_zip: null, ors_api_key: null })
+      of({
+        home_city: null,
+        home_zip: null,
+        ors_api_key: null,
+        ors_api_key_source: 'none',
+        ors_api_key_from_environment: false,
+      })
     );
 
     const restoreResponse: RestoreResponse = {
